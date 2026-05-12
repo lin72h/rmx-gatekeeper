@@ -1,0 +1,282 @@
+{
+  "schema": "nx-v64z.macos-oracle.accepted-contract.v1",
+  "spec_id": "ob2-core-descriptor-transfer",
+  "status": "closed_accepted",
+  "date": "2026-05-13",
+  "oracle_runners": [
+    {
+      "agent": "mx-a64z",
+      "architecture": "arm64",
+      "macos_version": "26.5",
+      "darwin_version": "25.5.0"
+    },
+    {
+      "agent": "mx-x64z",
+      "architecture": "x86_64",
+      "macos_version": "26.4",
+      "darwin_version": "25.4.0"
+    }
+  ],
+  "entry_refs_observability": "null_unobservable_on_stock_macos",
+  "source_spec": "findings/nx-v64z/ob2-core-descriptor-transfer-spec.md",
+  "contracts": [
+    {
+      "case_id": "descriptor_copy_send",
+      "probe": "macos-validation/probes/m2/descriptor_copy_send.c",
+      "test_id": "macos_m2_descriptor_copy_send",
+      "descriptor_disposition": "MACH_MSG_TYPE_COPY_SEND",
+      "expected_send_return": "MACH_MSG_SUCCESS",
+      "delivery_expected": true,
+      "sender_right_mutation": {
+        "description": "sender cargo send urefs remain stable",
+        "send_urefs_sequence": [1, 1, 1],
+        "type_sequence": [
+          "MACH_PORT_TYPE_SEND_RECEIVE",
+          "MACH_PORT_TYPE_SEND_RECEIVE",
+          "MACH_PORT_TYPE_SEND_RECEIVE"
+        ]
+      },
+      "receiver_delivered_right_type": "MACH_PORT_TYPE_SEND",
+      "receiver_delivered_refs": 1,
+      "usability": {
+        "usable": true,
+        "first_use_return": "MACH_MSG_SUCCESS",
+        "second_use_return": null
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "parent_delta": 0,
+        "child_delta": 0,
+        "receiver_deallocate_count": 1
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.1-descriptor-copy-send-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_descriptor_copy_send.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_descriptor_copy_send.json"
+      ]
+    },
+    {
+      "case_id": "descriptor_move_send",
+      "probe": "macos-validation/probes/m2/descriptor_move_send.c",
+      "test_id": "macos_m2_descriptor_move_send",
+      "descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND",
+      "expected_send_return": "MACH_MSG_SUCCESS",
+      "delivery_expected": true,
+      "sender_right_mutation": {
+        "description": "sender cargo send right consumed at send return",
+        "send_urefs_sequence": [1, 0, 0],
+        "type_sequence": [
+          "MACH_PORT_TYPE_SEND_RECEIVE",
+          "MACH_PORT_TYPE_RECEIVE",
+          "MACH_PORT_TYPE_RECEIVE"
+        ]
+      },
+      "receiver_delivered_right_type": "MACH_PORT_TYPE_SEND",
+      "receiver_delivered_refs": 1,
+      "usability": {
+        "usable": true,
+        "first_use_return": "MACH_MSG_SUCCESS",
+        "second_use_return": null
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "parent_delta": 0,
+        "child_delta": 0,
+        "receiver_deallocate_count": 1
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.2-descriptor-move-send-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_descriptor_move_send.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_descriptor_move_send.json"
+      ]
+    },
+    {
+      "case_id": "descriptor_move_send_once",
+      "probe": "macos-validation/probes/m2/send_once_descriptor.c",
+      "test_id": "macos_m2_send_once_descriptor",
+      "descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND_ONCE",
+      "send_once_create_api": "mach_port_extract_right(MACH_MSG_TYPE_MAKE_SEND_ONCE)",
+      "expected_send_return": "MACH_MSG_SUCCESS",
+      "delivery_expected": true,
+      "sender_right_mutation": {
+        "description": "sender send-once right consumed at send return",
+        "send_once_refs_before": 1,
+        "type_before": "MACH_PORT_TYPE_SEND_ONCE",
+        "after_send_query_return": "KERN_INVALID_NAME"
+      },
+      "receiver_delivered_right_type": "MACH_PORT_TYPE_SEND_ONCE",
+      "receiver_delivered_refs": 1,
+      "usability": {
+        "usable": true,
+        "first_use_return": "MACH_MSG_SUCCESS",
+        "second_use_return": "MACH_SEND_INVALID_DEST",
+        "receiver_first_receive_return": "MACH_MSG_SUCCESS",
+        "receiver_second_receive_return": "MACH_RCV_TIMED_OUT",
+        "receiver_gets_second_message": false
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "parent_delta": 0,
+        "child_delta": 0,
+        "receiver_deallocate_count": 0,
+        "note": "delivered send-once right is consumed by first use"
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.3-send-once-descriptor-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_send_once_descriptor.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_send_once_descriptor.json"
+      ]
+    },
+    {
+      "case_id": "invalid_descriptor_disposition",
+      "probe": "macos-validation/probes/m2/invalid_descriptor_disposition.c",
+      "test_id": "macos_m2_invalid_descriptor_disposition",
+      "descriptor_disposition": "0xff",
+      "expected_send_return": "MACH_SEND_INVALID_RIGHT",
+      "delivery_expected": false,
+      "sender_right_mutation": {
+        "description": "no rights consumed",
+        "service_send_refs_sequence": [1, 1],
+        "cargo_send_refs_sequence": [1, 1],
+        "cargo_type_sequence": [
+          "MACH_PORT_TYPE_SEND_RECEIVE",
+          "MACH_PORT_TYPE_SEND_RECEIVE"
+        ]
+      },
+      "receiver_delivered_right_type": null,
+      "receiver_delivered_refs": null,
+      "usability": {
+        "usable": false,
+        "receive_after_send": "MACH_RCV_TIMED_OUT"
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "delta": 0
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.4-negative-descriptor-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_invalid_descriptor_disposition.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_invalid_descriptor_disposition.json"
+      ]
+    },
+    {
+      "case_id": "nonexistent_descriptor_source",
+      "probe": "macos-validation/probes/m2/dead_name_descriptor_right.c",
+      "test_id": "macos_m2_dead_name_descriptor_right",
+      "descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND",
+      "source_kind": "nonexistent_name",
+      "expected_send_return": "MACH_SEND_INVALID_RIGHT",
+      "delivery_expected": false,
+      "sender_right_mutation": {
+        "description": "source remains invalid",
+        "source_type_before": "KERN_INVALID_NAME",
+        "source_type_after": "KERN_INVALID_NAME"
+      },
+      "receiver_delivered_right_type": null,
+      "receiver_delivered_refs": null,
+      "usability": {
+        "usable": false,
+        "receive_after_send": "MACH_RCV_TIMED_OUT"
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "delta": 0
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.4-negative-descriptor-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_dead_name_descriptor_right.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_dead_name_descriptor_right.json"
+      ]
+    },
+    {
+      "case_id": "dead_name_descriptor_source",
+      "probe": "macos-validation/probes/m2/dead_name_descriptor_right.c",
+      "test_id": "macos_m2_dead_name_descriptor_right",
+      "descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND",
+      "source_kind": "dead_name",
+      "expected_send_return": "MACH_MSG_SUCCESS",
+      "delivery_expected": true,
+      "sender_right_mutation": {
+        "description": "dead-name entry consumed",
+        "source_type_before": "MACH_PORT_TYPE_DEAD_NAME",
+        "source_dead_name_refs_before": 1,
+        "source_type_after_query": "KERN_INVALID_NAME",
+        "source_refs_after_query": "KERN_INVALID_NAME"
+      },
+      "receiver_delivered_right_type": "descriptor-bearing-message",
+      "receiver_delivered_refs": null,
+      "usability": {
+        "usable": null,
+        "receive_after_send": "MACH_MSG_SUCCESS",
+        "received_descriptor_count": 1,
+        "received_descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND_OR_PORT_SEND"
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "delta": 0,
+        "deallocate_delivered_return": "KERN_SUCCESS",
+        "deallocate_source_after_send": "KERN_INVALID_NAME"
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.4-negative-descriptor-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_dead_name_descriptor_right.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_dead_name_descriptor_right.json"
+      ],
+      "trap": "dead-name descriptor source succeeds, delivers, and consumes the dead-name entry"
+    },
+    {
+      "case_id": "duplicate_move_send_descriptors_same_right",
+      "probe": "macos-validation/probes/m2/double_move_send_descriptor.c",
+      "test_id": "macos_m2_double_move_send_descriptor",
+      "descriptor_disposition": "MACH_MSG_TYPE_MOVE_SEND",
+      "expected_send_return": "MACH_SEND_INVALID_RIGHT",
+      "delivery_expected": false,
+      "sender_right_mutation": {
+        "description": "send failure still fully consumes sender send right",
+        "cargo_send_refs_sequence": [1, 0, 0],
+        "cargo_type_sequence": [
+          "MACH_PORT_TYPE_SEND_RECEIVE",
+          "MACH_PORT_TYPE_RECEIVE"
+        ],
+        "sender_consumption_class": "fully_consumed"
+      },
+      "receiver_delivered_right_type": null,
+      "receiver_delivered_refs": null,
+      "usability": {
+        "usable": false,
+        "receive_after_send": "MACH_RCV_TIMED_OUT"
+      },
+      "cleanup": {
+        "expected": "baseline",
+        "delta": 0
+      },
+      "entry_refs": null,
+      "source_findings": [
+        "findings/nx-v64z/ob2.4-negative-descriptor-comparison.md"
+      ],
+      "raw_results": [
+        "macos-validation/results/mx-a64z/20260513-26.5-25.5.0/m2_double_move_send_descriptor.json",
+        "macos-validation/results/mx-x64z/20260513-26.4-25.4.0/m2_double_move_send_descriptor.json"
+      ],
+      "trap": "duplicate MOVE_SEND failure still consumes the sender send right"
+    }
+  ]
+}

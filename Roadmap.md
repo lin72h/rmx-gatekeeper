@@ -29,6 +29,7 @@ Completed high-value gates:
 Current status:
 
 - core OB2 is closed and ready to drive rmxOS M2 implementation
+- active oracle task is comparison automation and implementation handoff
 
 ## Batch Status
 
@@ -44,6 +45,7 @@ Current status:
 | OB2.2 | `m2/descriptor_move_send.c` | accepted |
 | OB2.3 | `m2/send_once_descriptor.c` | accepted |
 | OB2.4 | negative descriptor/error probes | accepted |
+| M2 support | machine-readable contract and rmxOS handoff | complete |
 | OB2.5 | queued descriptor cleanup and endpoint-exit behavior | likely follow-up |
 | OB3 | fork/exec and special-port inheritance behavior | likely follow-up |
 | OB4 | bootstrap/special-port mutation and permission edge cases | likely follow-up |
@@ -134,6 +136,8 @@ Accepted negative descriptor/error contract:
 Core OB2 is closed. The consolidated descriptor-transfer target is:
 
 - `findings/nx-v64z/ob2-core-descriptor-transfer-spec.md`
+- `findings/nx-v64z/ob2-core-descriptor-transfer-spec.json`
+- `findings/nx-v64z/rmxos-m2-implementation-target.md`
 
 The two most important negative-path surprises are:
 
@@ -142,6 +146,27 @@ The two most important negative-path surprises are:
 
 Do not infer descriptor behavior outside the accepted OB2 list. New behavior
 needs a new oracle probe or an explicit parent-approved intentional divergence.
+
+### Comparison Automation
+
+Immediate oracle priority after closing core OB2:
+
+- preserve the accepted descriptor contract
+- keep it machine-readable
+- make rmxOS comparison easy and repeatable
+
+The machine-readable accepted contract lives at:
+
+- `findings/nx-v64z/ob2-core-descriptor-transfer-spec.json`
+
+The rmxOS implementation-facing handoff lives at:
+
+- `findings/nx-v64z/rmxos-m2-implementation-target.md`
+
+OB2.5 is deferred until queued-message cleanup becomes implementation-relevant,
+a sender/receiver-exit bug appears, or parent explicitly asks for it. OB3 is
+deferred until after M2 descriptor transfer is implemented or blocked on
+fork/bootstrap behavior.
 
 ### OB2.3 Send-Once Descriptor
 
