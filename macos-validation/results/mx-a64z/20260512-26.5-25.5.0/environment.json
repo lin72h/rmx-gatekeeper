@@ -38,6 +38,12 @@
   "signing": {
     "binaries": [
       {
+        "path": "/Users/linz/Local/wip-mach/mach-oracle/macos-validation/.build/bin/foundation/port_get_refs",
+        "status": "signed",
+        "return_code": 0,
+        "output": "signed: /Users/linz/Local/wip-mach/mach-oracle/macos-validation/.build/bin/foundation/port_get_refs"
+      },
+      {
         "path": "/Users/linz/Local/wip-mach/mach-oracle/macos-validation/.build/bin/foundation/port_names",
         "status": "signed",
         "return_code": 0,

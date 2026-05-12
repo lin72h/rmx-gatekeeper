@@ -63,7 +63,10 @@ typedef int          mach_msg_return_t;
 #define MACH_PORT_TYPE_PORT_SET      (1 << 19)
 #define MACH_PORT_TYPE_DEAD_NAME     (1 << 20)
 #define MACH_PORT_TYPE_SEND_RECEIVE  (MACH_PORT_TYPE_SEND | MACH_PORT_TYPE_RECEIVE)
+#define MACH_PORT_RIGHT_SEND       0
 #define MACH_PORT_RIGHT_RECEIVE    1
+#define MACH_PORT_RIGHT_PORT_SET   3
+#define MACH_MSG_TYPE_MAKE_SEND   20
 #endif /* __APPLE__ */
 
 /*
