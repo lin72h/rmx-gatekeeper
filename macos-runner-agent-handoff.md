@@ -143,8 +143,18 @@ These findings are documented in:
 
 ## Stage 3 Order
 
-After Stage 1-2 smoke is trustworthy on both macOS hosts, implement foundation
-probes first:
+Parent approved Batch 1 in `parent-batch1-directive.md`.
+
+Treat Batch 1 as ordered gates:
+
+1. Foundation probes pass on both native macOS runners.
+2. Header COPY_SEND/MOVE_SEND probes pass on both native macOS runners.
+3. Descriptor COPY_SEND/MOVE_SEND probes pass on both native macOS runners.
+
+Do not start descriptor probes until foundation introspection is clean and
+header COPY_SEND behavior is captured.
+
+Foundation probes first:
 
 1. `foundation/port_names.c`
 2. `foundation/port_type.c`
@@ -159,6 +169,15 @@ For each probe:
 - preserve raw hex for unknown type bits
 - clean up and report whether the namespace returned to baseline
 - add explicit Makefile rules and update `PROBES`
+
+For Batch 1, force-add raw JSON artifacts:
+
+- `environment.json`
+- every probe result JSON
+- curated markdown summary per runner
+
+Empty stderr logs do not need to be force-added unless they explain a failure.
+If stderr is non-empty, preserve it.
 
 ## Stage 4-5 Priority Questions
 
@@ -175,6 +194,25 @@ After foundation probes are clean on both macOS hosts, answer these in order:
 
 Use `mach_msg()` only. Do not switch to `mach_msg2()` or
 `mach_msg_overwrite()` unless a specific probe is about those APIs.
+
+For Batch 1, implement only:
+
+1. `m1/header_copy_send_accounting.c`
+2. `m1/header_move_send_accounting.c`
+3. `m2/descriptor_copy_send.c`
+4. `m2/descriptor_move_send.c`
+
+Send-once, invalid descriptor, dead name, double-move, copyout failure,
+bootstrap, fork inheritance, and queued exit probes are Batch 2 unless parent
+explicitly reorders them.
+
+Stop and ask parent if:
+
+- `mx-x64z` and `mx-a64z` disagree
+- any foundation introspection API is unreliable
+- cleanup does not return to baseline
+- COPY_SEND changes sender urefs on native macOS
+- probe logic needs private entitlement, SIP change, or non-stock API
 
 ## Process-Probe Safety
 
@@ -213,6 +251,7 @@ Read these before Stage 3 work:
 - `macos-validation/README.md`
 - `gpt-stage12-integration-review.md`
 - `parent-gpt-stage12-integration-review.md`
+- `parent-batch1-directive.md`
 - `final-preimplementation-plan.md`
 - `comprehensive-nx-v64z-macos-oracle-plan.md`
 - `test-migration-map.md`
