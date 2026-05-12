@@ -9,10 +9,12 @@ Test ID: `macos_foundation_port_type`
 | Runner | Status | Kernel | Arch | Receive Type | Send+Receive Type | Port Set Type | Task Self Type | Cleanup Baseline |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `mx-a64z` | `pass` | `25.5.0` | `arm64` | `MACH_PORT_TYPE_RECEIVE` / `0x20000` | `MACH_PORT_TYPE_SEND_RECEIVE` / `0x30000` | `MACH_PORT_TYPE_PORT_SET` / `0x80000` | `MACH_PORT_TYPE_SEND` / `0x10000` | true |
-| `mx-x64z` | pending | pending | pending | pending | pending | pending | pending | pending |
+| `mx-x64z` | `pass` | `25.4.0` | `x86_64` | `MACH_PORT_TYPE_RECEIVE` / `0x20000` | `MACH_PORT_TYPE_SEND_RECEIVE` / `0x30000` | `MACH_PORT_TYPE_PORT_SET` / `0x80000` | `MACH_PORT_TYPE_SEND` / `0x10000` | true |
 
-Current comparison status: incomplete until the native Intel runner publishes
-its OB1.2 raw `foundation_port_type.json`.
+Cross-runner finding: both native macOS runners agree for OB1.2. Controlled
+receive, send-receive, and port-set type checks are exact on both hosts;
+`mach_task_self()` is observable as `MACH_PORT_TYPE_SEND` on both hosts; cleanup
+returns to baseline on both hosts.
 
-Do not start `foundation/port_get_refs.c`, header, or descriptor probes until
-both `mx-a64z` and `mx-x64z` have passing OB1.2 results.
+Gate status: OB1.2 is passed on both native macOS runners. OB1.3
+`foundation/port_get_refs.c` remains unstarted.
