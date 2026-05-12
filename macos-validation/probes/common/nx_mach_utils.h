@@ -67,6 +67,7 @@ typedef int          mach_msg_return_t;
 #define MACH_PORT_RIGHT_RECEIVE    1
 #define MACH_PORT_RIGHT_PORT_SET   3
 #define MACH_MSG_TYPE_MAKE_SEND   20
+#define MACH_MSG_PORT_DESCRIPTOR   0
 #endif /* __APPLE__ */
 
 /*
