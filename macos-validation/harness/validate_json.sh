@@ -96,9 +96,10 @@ def require_string_or_null(value, prefix, errors):
 
 
 def require_int_or_null(value, prefix, errors):
-    if value is not None or isinstance(value, bool):
-        if not isinstance(value, int) or isinstance(value, bool):
-            errors.append(f"{prefix} is not an integer or null")
+    if value is None:
+        return
+    if type(value) is not int:
+        errors.append(f"{prefix} is not an integer or null")
 
 
 def validate_port_ref(obj, prefix, errors):

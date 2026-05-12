@@ -185,13 +185,14 @@ PY
 )
 
 if [ "$os_name" = "Darwin" ]; then
+    if [ "$rosetta" = "active" ]; then
+        echo "Rosetta-translated execution is not valid oracle evidence; use native Intel for mx-x64z or native arm64 for mx-a64z." >&2
+        exit 1
+    fi
+
     case "$AGENT:$arch" in
         mx-x64z:x86_64) ;;
         mx-a64z:arm64)
-            if [ "$rosetta" = "active" ]; then
-                echo "Apple Silicon runner is executing under Rosetta; refusing mx-a64z evidence." >&2
-                exit 1
-            fi
             ;;
         rx:*)
             echo "Agent rx is reserved for non-macOS development/comparison lanes; use mx-x64z or mx-a64z on native macOS." >&2
