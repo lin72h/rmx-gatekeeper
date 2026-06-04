@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rmxos_oracle.stable15_minor_rebase_run.v1",
+  "title": "Stable/15 Minor Rebase Run Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "claim_boundary",
+    "commits",
+    "paths",
+    "sync",
+    "accepted_artifact_tuple",
+    "env_matrix",
+    "evidence",
+    "guardrails"
+  ],
+  "properties": {
+    "schema": {
+      "const": "rmxos_oracle.stable15_minor_rebase_run.v1"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "env_pin_updated",
+        "s3_passed",
+        "d14_passed",
+        "d17_d18_passed",
+        "failed",
+        "accepted_routine_sync"
+      ]
+    },
+    "claim_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "certification_claim",
+        "adoption_ceremony",
+        "source_deletion_authorized",
+        "rollback_tree_mutation_authorized"
+      ],
+      "properties": {
+        "certification_claim": {
+          "const": false
+        },
+        "adoption_ceremony": {
+          "const": false
+        },
+        "source_deletion_authorized": {
+          "const": false
+        },
+        "rollback_tree_mutation_authorized": {
+          "const": false
+        }
+      }
+    },
+    "commits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracle_repo_commit",
+        "source_policy_repo_commit",
+        "active_source_old_commit",
+        "active_source_new_commit",
+        "rollback_source_commit",
+        "oracle_parity_tag_commit"
+      ],
+      "properties": {
+        "oracle_repo_commit": {
+          "type": "string"
+        },
+        "source_policy_repo_commit": {
+          "type": "string"
+        },
+        "active_source_old_commit": {
+          "type": "string"
+        },
+        "active_source_new_commit": {
+          "type": "string"
+        },
+        "rollback_source_commit": {
+          "type": "string"
+        },
+        "oracle_parity_tag_commit": {
+          "type": "string"
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracle_repo",
+        "source_policy_repo",
+        "active_source",
+        "active_objdir",
+        "rollback_source"
+      ],
+      "properties": {
+        "oracle_repo": {
+          "type": "string"
+        },
+        "source_policy_repo": {
+          "type": "string"
+        },
+        "active_source": {
+          "type": "string"
+        },
+        "active_objdir": {
+          "type": "string"
+        },
+        "rollback_source": {
+          "type": "string"
+        }
+      }
+    },
+    "sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "upstream_ref",
+        "local_branch",
+        "stdin_isolation_required"
+      ],
+      "properties": {
+        "model": {
+          "enum": [
+            "minor_rebase_merge_based_source_sync"
+          ]
+        },
+        "upstream_ref": {
+          "type": "string"
+        },
+        "local_branch": {
+          "type": "string"
+        },
+        "stdin_isolation_required": {
+          "const": true
+        }
+      }
+    },
+    "accepted_artifact_tuple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_source_commit",
+        "kernel",
+        "kernel_full",
+        "mach_ko"
+      ],
+      "properties": {
+        "active_source_commit": {
+          "type": "string"
+        },
+        "kernel": {
+          "$ref": "#/$defs/artifact"
+        },
+        "kernel_full": {
+          "$ref": "#/$defs/artifact"
+        },
+        "mach_ko": {
+          "$ref": "#/$defs/artifact"
+        },
+        "s3_post_stage_guest_image": {
+          "$ref": "#/$defs/artifact"
+        },
+        "boot_guest_image": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "env_matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "summary",
+        "command"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_evidence_root",
+        "s3",
+        "d14"
+      ],
+      "properties": {
+        "raw_evidence_root": {
+          "type": "string"
+        },
+        "s3": {
+          "$ref": "#/$defs/evidence_ref"
+        },
+        "d14": {
+          "$ref": "#/$defs/evidence_ref"
+        },
+        "d17": {
+          "$ref": "#/$defs/evidence_ref"
+        },
+        "d18": {
+          "$ref": "#/$defs/evidence_ref"
+        }
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "certification_created",
+        "repo_local_artifacts_created",
+        "source_deletion",
+        "source_path_rename",
+        "rollback_tree_mutation",
+        "oracle_parity_tag_moved",
+        "raw_priv_runs_committed"
+      ],
+      "properties": {
+        "certification_created": {
+          "const": false
+        },
+        "repo_local_artifacts_created": {
+          "const": false
+        },
+        "source_deletion": {
+          "const": false
+        },
+        "source_path_rename": {
+          "const": false
+        },
+        "rollback_tree_mutation": {
+          "const": false
+        },
+        "oracle_parity_tag_moved": {
+          "const": false
+        },
+        "raw_priv_runs_committed": {
+          "const": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "size"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "path"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run",
+            "not_required"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "summary_json": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
