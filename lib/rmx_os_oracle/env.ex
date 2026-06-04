@@ -12,6 +12,8 @@ defmodule RmxOSOracle.Env do
   @default_env_local "priv/env/env.local"
   @canonical_freebsd_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
   @official_stable15_candidate_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
+  @official_stable15_candidate_commit "63ce90100a4e"
+  @official_stable15_candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
   @lanes %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
     "launchd" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD",
@@ -24,7 +26,8 @@ defmodule RmxOSOracle.Env do
   def check(lane, opts \\ []) do
     env_path = Keyword.get(opts, :env_path, @default_env_local)
     env = load(env_path)
-    base_profile = Map.get(env, "NXPLATFORM_BASE_PROFILE")
+    raw_base_profile = Map.get(env, "NXPLATFORM_BASE_PROFILE")
+    {source_profile, profile_errors} = source_profile(raw_base_profile)
     workspace_root = Map.get(env, "NXPLATFORM_WORKSPACE_ROOT")
     freebsd_src = Map.get(env, "NXPLATFORM_FREEBSD_SRC")
     lane_key = Map.get(@lanes, lane)
@@ -35,8 +38,11 @@ defmodule RmxOSOracle.Env do
         Paths.expand_config_path(configured_prefix, env)
       end
 
+    freebsd_src_commit = git_short_sha(freebsd_src)
+    expected_freebsd_src_commit = expected_freebsd_src_commit(source_profile)
+
     errors =
-      []
+      profile_errors
       |> require_lane(lane, lane_key)
       |> require_path("NXPLATFORM_WORKSPACE_ROOT", workspace_root)
       |> require_dir("NXPLATFORM_WORKSPACE_ROOT", workspace_root)
@@ -44,18 +50,29 @@ defmodule RmxOSOracle.Env do
       |> require_dir("NXPLATFORM_FREEBSD_SRC", freebsd_src)
       |> reject_symlink("NXPLATFORM_FREEBSD_SRC", freebsd_src)
       |> reject_oracle_source_default(freebsd_src)
-      |> require_profile_freebsd_src(freebsd_src, base_profile)
+      |> require_profile_freebsd_src(freebsd_src, source_profile)
+      |> require_expected_freebsd_src_commit(
+        freebsd_src_commit,
+        expected_freebsd_src_commit,
+        source_profile
+      )
       |> require_configured_prefix(lane_key, configured_prefix)
       |> reject_unresolved_prefix(lane_key, configured_prefix, resolved_prefix)
       |> require_absolute_prefix(lane_key, resolved_prefix)
       |> require_existing_prefix(lane_key, resolved_prefix)
+      |> require_profile_objdirprefix(resolved_prefix, source_profile)
 
     %{
       "schema" => "rmxos_oracle.env_check.v1",
       "status" => if(errors == [], do: "pass", else: "fail"),
       "lane" => lane,
+      "configured_base_profile" => raw_base_profile,
+      "accepted_source_profile" => source_profile,
+      "source_pin_id" => source_profile,
       "workspace_root" => workspace_root,
       "freebsd_src" => freebsd_src,
+      "freebsd_src_commit" => freebsd_src_commit,
+      "expected_freebsd_src_commit" => expected_freebsd_src_commit,
       "freebsd_src_is_symlink" =>
         if(is_binary(freebsd_src), do: Paths.symlink?(freebsd_src), else: nil),
       "lane_objdir_env_key" => lane_key,
@@ -66,8 +83,8 @@ defmodule RmxOSOracle.Env do
       "projected_env" => %{
         "NXPLATFORM_KERNEL_OBJDIRPREFIX" => resolved_prefix
       },
-      "base_profile" => base_profile,
-      "rmxos_source_commit" => git_short_sha(freebsd_src),
+      "base_profile" => source_profile,
+      "rmxos_source_commit" => freebsd_src_commit,
       "donor_roots" => donor_roots(env),
       "errors" => errors
     }
@@ -164,10 +181,30 @@ defmodule RmxOSOracle.Env do
     end
   end
 
+  defp source_profile(nil), do: {"releng151-current", []}
+
+  defp source_profile(value) when is_binary(value) do
+    case String.trim(value) do
+      "" -> {"releng151-current", []}
+      "releng151-current" -> {"releng151-current", []}
+      "official-stable15-candidate" -> {"official-stable15-candidate", []}
+      other -> {nil, ["unknown NXPLATFORM_BASE_PROFILE: #{other}"]}
+    end
+  end
+
+  defp source_profile(value),
+    do: {nil, ["NXPLATFORM_BASE_PROFILE must be a string: #{inspect(value)}"]}
+
+  defp expected_freebsd_src_commit("official-stable15-candidate"),
+    do: @official_stable15_candidate_commit
+
+  defp expected_freebsd_src_commit(_source_profile), do: nil
+
   defp require_profile_freebsd_src(errors, freebsd_src, base_profile) do
     expected =
       case base_profile do
         "official-stable15-candidate" -> @official_stable15_candidate_src
+        "releng151-current" -> @canonical_freebsd_src
         _ -> @canonical_freebsd_src
       end
 
@@ -178,6 +215,27 @@ defmodule RmxOSOracle.Env do
         ]
     else
       errors
+    end
+  end
+
+  defp require_expected_freebsd_src_commit(
+         errors,
+         freebsd_src_commit,
+         expected_freebsd_src_commit,
+         source_profile
+       ) do
+    cond do
+      not is_binary(expected_freebsd_src_commit) ->
+        errors
+
+      freebsd_src_commit == expected_freebsd_src_commit ->
+        errors
+
+      true ->
+        errors ++
+          [
+            "NXPLATFORM_FREEBSD_SRC commit for #{source_profile} must be #{expected_freebsd_src_commit}, got #{freebsd_src_commit || "unknown"}"
+          ]
     end
   end
 
@@ -220,10 +278,28 @@ defmodule RmxOSOracle.Env do
     end
   end
 
+  defp require_profile_objdirprefix(errors, resolved_prefix, "official-stable15-candidate") do
+    cond do
+      not is_binary(resolved_prefix) ->
+        errors
+
+      Path.expand(resolved_prefix) == @official_stable15_candidate_objdir ->
+        errors
+
+      true ->
+        errors ++
+          [
+            "NXPLATFORM_KERNEL_OBJDIRPREFIX for official-stable15-candidate must be #{@official_stable15_candidate_objdir}, got #{resolved_prefix}"
+          ]
+    end
+  end
+
+  defp require_profile_objdirprefix(errors, _resolved_prefix, _source_profile), do: errors
+
   defp git_short_sha(path) do
     cond do
       is_binary(path) and File.dir?(path) ->
-        case System.cmd("git", ["-C", path, "rev-parse", "--short", "HEAD"],
+        case System.cmd("git", ["-C", path, "rev-parse", "--short=12", "HEAD"],
                stderr_to_stdout: true
              ) do
           {out, 0} -> String.trim(out)
