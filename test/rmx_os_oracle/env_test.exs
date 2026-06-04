@@ -62,8 +62,8 @@ defmodule RmxOSOracleEnvTest do
     assert report["accepted_source_profile"] == "official-stable15-candidate"
     assert report["source_pin_id"] == "official-stable15-candidate"
     assert report["freebsd_src"] == @candidate_src
-    assert report["freebsd_src_commit"] == "63ce90100a4e"
-    assert report["expected_freebsd_src_commit"] == "63ce90100a4e"
+    assert report["freebsd_src_commit"] == "f71260cf4c9e"
+    assert report["expected_freebsd_src_commit"] == "f71260cf4c9e"
     assert report["kernel_objdirprefix"] == @candidate_objdir
   end
 

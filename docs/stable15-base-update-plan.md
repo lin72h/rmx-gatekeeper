@@ -320,6 +320,30 @@ Required next source-side fix:
 - After syscall 468 no longer stops the run, classify the WITNESS lock-order
   result separately.
 
+## 5.2 Accepted Minor Rebase Candidate
+
+The current official stable/15 candidate is a merge-based minor rebase/minor
+sync, following the Swift LLVM-style upstream merge policy. It is not a major
+rebase.
+
+Accepted candidate source:
+
+- path: `/Users/me/wip-mach/freebsd-src-official-stable-15`
+- branch: `rmx/official-stable15-mach`
+- candidate head: `f71260cf4c9e`
+- base SHA: `2cdb0c07e25b`
+
+Accepted clean-build S2 artifact tuple:
+
+| artifact | path | sha256 | size |
+| --- | --- | --- | ---: |
+| kernel | `/Users/me/wip-mach/build/official-stable15-mach-obj/Users/me/wip-mach/freebsd-src-official-stable-15/amd64.amd64/sys/MACHDEBUGDEBUG/kernel` | `39031adb1267455043f6b04f4e073dbb975e8aa91d80a7808fd9b92a2ec63fb5` | `31404792` |
+| kernel.full | `/Users/me/wip-mach/build/official-stable15-mach-obj/Users/me/wip-mach/freebsd-src-official-stable-15/amd64.amd64/sys/MACHDEBUGDEBUG/kernel.full` | `845982055bd8be6989ec63e84ba0c23e5ab851212a919a73c1e1dcc9830584c8` | `133231776` |
+| mach.ko | `/Users/me/wip-mach/build/official-stable15-mach-obj/Users/me/wip-mach/freebsd-src-official-stable-15/amd64.amd64/sys/modules/mach/mach.ko` | `f9c871ce59742dcda7d8fabb7e211177f84af5c9083cfa1e70023de1d80e625e` | `345360` |
+
+Oracle must recompute these hashes during S3 before staging. Do not trust the
+source-side tuple without local recomputation.
+
 ## 6. Failure Policy
 
 If D14 fails on the candidate source root, stop and classify the failure before

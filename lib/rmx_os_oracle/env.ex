@@ -12,7 +12,7 @@ defmodule RmxOSOracle.Env do
   @default_env_local "priv/env/env.local"
   @canonical_freebsd_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
   @official_stable15_candidate_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
-  @official_stable15_candidate_commit "63ce90100a4e"
+  @official_stable15_candidate_commit "f71260cf4c9e"
   @official_stable15_candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
   @lanes %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
