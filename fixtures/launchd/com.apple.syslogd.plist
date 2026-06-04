@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>HopefullyExitsLast</key>
+	<true/>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>ASL_DISABLE</key>
+		<string>1</string>
+	</dict>
+	<key>POSIXSpawnType</key>
+	<string>Adaptive</string>
+	<key>MachServices</key>
+	<dict>
+		<key>com.apple.system.logger</key>
+		<dict>
+			<key>ResetAtClose</key>
+			<true/>
+		</dict>
+	</dict>
+	<key>EnableTransactions</key>
+	<true/>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/sbin/asld</string>
+		<string>-d</string>
+	</array>
+	<key>Sockets</key>
+	<dict>
+		<key>BSDSystemLogger</key>
+		<dict>
+			<key>SockPathMode</key>
+			<integer>438</integer>
+			<key>SockPathName</key>
+			<string>/var/run/log</string>
+			<key>SockType</key>
+			<string>dgram</string>
+		</dict>
+	</dict>
+	<key>OnDemand</key>
+	<false/>
+	<key>Label</key>
+	<string>com.apple.syslogd</string>
+</dict>
+</plist>

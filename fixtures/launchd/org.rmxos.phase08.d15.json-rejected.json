@@ -1,0 +1,6 @@
+{
+  "Label": "org.rmxos.phase08.d15.json-rejected",
+  "ProgramArguments": [
+    "/root/nxplatform/phase1/d15-should-not-run"
+  ]
+}

@@ -2,3 +2,10 @@ macos-validation/.build/
 macos-validation/results/*/*/
 *.o
 *.dSYM/
+/_build/
+/deps/
+/.elixir_ls/
+/priv/env/env.local
+/priv/runs/
+/zig/.zig-cache/
+/zig/zig-out/

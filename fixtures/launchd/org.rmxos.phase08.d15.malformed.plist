@@ -1,0 +1,6 @@
+{
+  "Label": "org.rmxos.phase08.d15.malformed",
+  "ProgramArguments": [
+    "/root/nxplatform/phase1/d15-malformed-should-not-run"
+  ]
+}

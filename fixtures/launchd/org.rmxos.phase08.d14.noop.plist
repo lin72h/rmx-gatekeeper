@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+	"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>org.rmxos.phase08.d14.noop</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/root/nxplatform/phase1/d14-should-not-run</string>
+	</array>
+</dict>
+</plist>
