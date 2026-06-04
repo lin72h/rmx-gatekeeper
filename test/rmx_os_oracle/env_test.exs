@@ -9,6 +9,13 @@ defmodule RmxOSOracleEnvTest do
   @releng_objdir "/Users/me/wip-mach/build/releng151-mach-obj"
   @releng_rc1_objdir "/Users/me/wip-mach/build/releng151-rc1-mach-obj"
   @candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
+  @candidate_commit "f71260cf4c9e"
+  @lane_env_keys %{
+    "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
+    "launchd" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD",
+    "dispatch" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_DISPATCH",
+    "libthr" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LIBTHR"
+  }
 
   @nx_env_keys ~w(
     NXPLATFORM_BASE_PROFILE
@@ -20,19 +27,26 @@ defmodule RmxOSOracleEnvTest do
     NXPLATFORM_KERNEL_OBJDIRPREFIX_LIBTHR
   )
 
-  test "absent profile defaults to releng151-current source pin" do
-    report =
-      check_with_env(%{
-        "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
-        "NXPLATFORM_FREEBSD_SRC" => @releng_src,
-        "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => @releng_objdir
-      })
+  test "absent profile defaults to stable15-active source pin on every lane" do
+    for {lane, lane_key} <- @lane_env_keys do
+      report =
+        check_with_env(
+          %{
+            "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
+            "NXPLATFORM_FREEBSD_SRC" => @candidate_src,
+            lane_key => @candidate_objdir
+          },
+          lane
+        )
 
-    assert report["status"] == "pass"
-    assert report["accepted_source_profile"] == "releng151-current"
-    assert report["source_pin_id"] == "releng151-current"
-    assert report["freebsd_src"] == @releng_src
-    assert report["kernel_objdirprefix"] == @releng_objdir
+      assert report["status"] == "pass"
+      assert report["accepted_source_profile"] == "stable15-active"
+      assert report["source_pin_id"] == "stable15-active"
+      assert report["freebsd_src"] == @candidate_src
+      assert report["freebsd_src_commit"] == @candidate_commit
+      assert report["expected_freebsd_src_commit"] == @candidate_commit
+      assert report["kernel_objdirprefix"] == @candidate_objdir
+    end
   end
 
   test "explicit releng151-current source pin passes" do
@@ -46,10 +60,24 @@ defmodule RmxOSOracleEnvTest do
 
     assert report["status"] == "pass"
     assert report["accepted_source_profile"] == "releng151-current"
+    assert report["source_pin_id"] == "releng151-current"
     assert report["freebsd_src"] == @releng_src
+    assert report["expected_freebsd_src_commit"] == nil
   end
 
-  test "official stable15 candidate source pin requires exact source, commit, and objdir" do
+  test "explicit stable15-active source pin requires exact source, commit, and objdir" do
+    report =
+      check_with_env(%{
+        "NXPLATFORM_BASE_PROFILE" => " stable15-active ",
+        "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
+        "NXPLATFORM_FREEBSD_SRC" => @candidate_src,
+        "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => @candidate_objdir
+      })
+
+    assert_stable15_report(report, "stable15-active")
+  end
+
+  test "official stable15 candidate alias shares stable15-active source, commit, and objdir" do
     report =
       check_with_env(%{
         "NXPLATFORM_BASE_PROFILE" => "official-stable15-candidate",
@@ -58,20 +86,14 @@ defmodule RmxOSOracleEnvTest do
         "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => @candidate_objdir
       })
 
-    assert report["status"] == "pass"
-    assert report["accepted_source_profile"] == "official-stable15-candidate"
-    assert report["source_pin_id"] == "official-stable15-candidate"
-    assert report["freebsd_src"] == @candidate_src
-    assert report["freebsd_src_commit"] == "f71260cf4c9e"
-    assert report["expected_freebsd_src_commit"] == "f71260cf4c9e"
-    assert report["kernel_objdirprefix"] == @candidate_objdir
+    assert_stable15_report(report, "official-stable15-candidate")
   end
 
-  test "candidate source path without profile fails closed" do
+  test "default profile with releng source fails closed" do
     report =
       check_with_env(%{
         "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
-        "NXPLATFORM_FREEBSD_SRC" => @candidate_src,
+        "NXPLATFORM_FREEBSD_SRC" => @releng_src,
         "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => @candidate_objdir
       })
 
@@ -90,7 +112,7 @@ defmodule RmxOSOracleEnvTest do
     assert_failed_with(report, "unknown NXPLATFORM_BASE_PROFILE: stable15-surprise")
   end
 
-  test "unknown absolute source path fails source pin validation" do
+  test "unknown absolute source path fails active source pin validation" do
     report =
       check_with_env(%{
         "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
@@ -101,7 +123,40 @@ defmodule RmxOSOracleEnvTest do
     assert_failed_with(report, "NXPLATFORM_FREEBSD_SRC must match accepted source pin")
   end
 
-  test "candidate profile rejects releng and default objdir prefixes" do
+  test "default stable15-active rejects releng and default objdir prefixes" do
+    for objdir <- [@releng_objdir, @releng_rc1_objdir, "/usr/obj"] do
+      report =
+        check_with_env(%{
+          "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
+          "NXPLATFORM_FREEBSD_SRC" => @candidate_src,
+          "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => objdir
+        })
+
+      assert_failed_with(
+        report,
+        "NXPLATFORM_KERNEL_OBJDIRPREFIX for stable15-active must be #{@candidate_objdir}"
+      )
+    end
+  end
+
+  test "stable15-active rejects releng and default objdir prefixes" do
+    for objdir <- [@releng_objdir, @releng_rc1_objdir, "/usr/obj"] do
+      report =
+        check_with_env(%{
+          "NXPLATFORM_BASE_PROFILE" => "stable15-active",
+          "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
+          "NXPLATFORM_FREEBSD_SRC" => @candidate_src,
+          "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => objdir
+        })
+
+      assert_failed_with(
+        report,
+        "NXPLATFORM_KERNEL_OBJDIRPREFIX for stable15-active must be #{@candidate_objdir}"
+      )
+    end
+  end
+
+  test "official stable15 candidate alias rejects releng and default objdir prefixes" do
     for objdir <- [@releng_objdir, @releng_rc1_objdir, "/usr/obj"] do
       report =
         check_with_env(%{
@@ -118,11 +173,33 @@ defmodule RmxOSOracleEnvTest do
     end
   end
 
-  defp check_with_env(env) do
+  test "stable15-active rejects nested releng source" do
+    report =
+      check_with_env(%{
+        "NXPLATFORM_BASE_PROFILE" => "stable15-active",
+        "NXPLATFORM_WORKSPACE_ROOT" => @workspace_root,
+        "NXPLATFORM_FREEBSD_SRC" => @releng_src,
+        "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD" => @candidate_objdir
+      })
+
+    assert_failed_with(report, "NXPLATFORM_FREEBSD_SRC must match accepted source pin")
+  end
+
+  defp check_with_env(env, lane \\ "launchd") do
     with_clean_nx_env(fn ->
       env_path = write_env_file!(env)
-      Env.check("launchd", env_path: env_path)
+      Env.check(lane, env_path: env_path)
     end)
+  end
+
+  defp assert_stable15_report(report, expected_profile) do
+    assert report["status"] == "pass"
+    assert report["accepted_source_profile"] == expected_profile
+    assert report["source_pin_id"] == expected_profile
+    assert report["freebsd_src"] == @candidate_src
+    assert report["freebsd_src_commit"] == @candidate_commit
+    assert report["expected_freebsd_src_commit"] == @candidate_commit
+    assert report["kernel_objdirprefix"] == @candidate_objdir
   end
 
   defp write_env_file!(env) do

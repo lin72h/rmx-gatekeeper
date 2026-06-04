@@ -10,10 +10,14 @@ defmodule RmxOSOracle.Env do
   alias RmxOSOracle.Paths
 
   @default_env_local "priv/env/env.local"
+  @releng151_current "releng151-current"
+  @stable15_active "stable15-active"
+  @official_stable15_candidate "official-stable15-candidate"
   @canonical_freebsd_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
-  @official_stable15_candidate_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
-  @official_stable15_candidate_commit "f71260cf4c9e"
-  @official_stable15_candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
+  @stable15_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
+  @stable15_commit "f71260cf4c9e"
+  @stable15_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
+  @stable15_profiles [@stable15_active, @official_stable15_candidate]
   @lanes %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
     "launchd" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD",
@@ -181,13 +185,14 @@ defmodule RmxOSOracle.Env do
     end
   end
 
-  defp source_profile(nil), do: {"releng151-current", []}
+  defp source_profile(nil), do: {@stable15_active, []}
 
   defp source_profile(value) when is_binary(value) do
     case String.trim(value) do
-      "" -> {"releng151-current", []}
-      "releng151-current" -> {"releng151-current", []}
-      "official-stable15-candidate" -> {"official-stable15-candidate", []}
+      "" -> {@stable15_active, []}
+      @releng151_current -> {@releng151_current, []}
+      @stable15_active -> {@stable15_active, []}
+      @official_stable15_candidate -> {@official_stable15_candidate, []}
       other -> {nil, ["unknown NXPLATFORM_BASE_PROFILE: #{other}"]}
     end
   end
@@ -195,28 +200,34 @@ defmodule RmxOSOracle.Env do
   defp source_profile(value),
     do: {nil, ["NXPLATFORM_BASE_PROFILE must be a string: #{inspect(value)}"]}
 
-  defp expected_freebsd_src_commit("official-stable15-candidate"),
-    do: @official_stable15_candidate_commit
+  defp expected_freebsd_src_commit(source_profile) when source_profile in @stable15_profiles,
+    do: @stable15_commit
 
   defp expected_freebsd_src_commit(_source_profile), do: nil
 
   defp require_profile_freebsd_src(errors, freebsd_src, base_profile) do
-    expected =
-      case base_profile do
-        "official-stable15-candidate" -> @official_stable15_candidate_src
-        "releng151-current" -> @canonical_freebsd_src
-        _ -> @canonical_freebsd_src
-      end
+    expected = profile_freebsd_src(base_profile)
 
-    if is_binary(freebsd_src) and Path.expand(freebsd_src) != expected do
-      errors ++
-        [
-          "NXPLATFORM_FREEBSD_SRC must match accepted source pin for #{base_profile || "default"}: #{expected}"
-        ]
-    else
-      errors
+    cond do
+      not is_binary(expected) ->
+        errors
+
+      is_binary(freebsd_src) and Path.expand(freebsd_src) != expected ->
+        errors ++
+          [
+            "NXPLATFORM_FREEBSD_SRC must match accepted source pin for #{base_profile || "default"}: #{expected}"
+          ]
+
+      true ->
+        errors
     end
   end
+
+  defp profile_freebsd_src(source_profile) when source_profile in @stable15_profiles,
+    do: @stable15_src
+
+  defp profile_freebsd_src(@releng151_current), do: @canonical_freebsd_src
+  defp profile_freebsd_src(_source_profile), do: nil
 
   defp require_expected_freebsd_src_commit(
          errors,
@@ -278,18 +289,19 @@ defmodule RmxOSOracle.Env do
     end
   end
 
-  defp require_profile_objdirprefix(errors, resolved_prefix, "official-stable15-candidate") do
+  defp require_profile_objdirprefix(errors, resolved_prefix, source_profile)
+       when source_profile in @stable15_profiles do
     cond do
       not is_binary(resolved_prefix) ->
         errors
 
-      Path.expand(resolved_prefix) == @official_stable15_candidate_objdir ->
+      Path.expand(resolved_prefix) == @stable15_objdir ->
         errors
 
       true ->
         errors ++
           [
-            "NXPLATFORM_KERNEL_OBJDIRPREFIX for official-stable15-candidate must be #{@official_stable15_candidate_objdir}, got #{resolved_prefix}"
+            "NXPLATFORM_KERNEL_OBJDIRPREFIX for #{source_profile} must be #{@stable15_objdir}, got #{resolved_prefix}"
           ]
     end
   end
