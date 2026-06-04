@@ -1,7 +1,11 @@
 defmodule Mix.Tasks.Oracle.Migration.Parity do
   use Mix.Task
 
-  alias RmxOSOracle.Migration.{Phase08MarkerManifest, Phase08SourceTransform}
+  alias RmxOSOracle.Migration.{
+    Phase08D14LaunchctlPlist,
+    Phase08MarkerManifest,
+    Phase08SourceTransform
+  }
 
   @shortdoc "Run migration parity checks for approved slices"
 
@@ -13,7 +17,9 @@ defmodule Mix.Tasks.Oracle.Migration.Parity do
           legacy_repo: :string,
           legacy_ref: :string,
           oracle_repo: :string,
-          out_root: :string
+          out_root: :string,
+          env_path: :string,
+          lane: :string
         ]
       )
 
@@ -24,9 +30,12 @@ defmodule Mix.Tasks.Oracle.Migration.Parity do
       ["phase08.marker_manifest"] ->
         run_slice("phase08.marker_manifest", Phase08MarkerManifest, opts)
 
+      ["phase08.d14.launchctl_plist_inert_load"] ->
+        run_slice("phase08.d14.launchctl_plist_inert_load", Phase08D14LaunchctlPlist, opts)
+
       [] ->
         Mix.shell().error(
-          "missing slice id; expected phase08.source_transform or phase08.marker_manifest"
+          "missing slice id; expected phase08.source_transform, phase08.marker_manifest, or phase08.d14.launchctl_plist_inert_load"
         )
 
         exit({:shutdown, 1})
@@ -44,7 +53,9 @@ defmodule Mix.Tasks.Oracle.Migration.Parity do
         legacy_ref: Keyword.get(opts, :legacy_ref, "oracle-parity-a30ef3f"),
         oracle_repo: Keyword.get(opts, :oracle_repo, File.cwd!()),
         out_root:
-          Keyword.get(opts, :out_root, Path.join(File.cwd!(), "priv/runs/migration-parity"))
+          Keyword.get(opts, :out_root, Path.join(File.cwd!(), "priv/runs/migration-parity")),
+        env_path: Keyword.get(opts, :env_path, "priv/env/env.local"),
+        lane: Keyword.get(opts, :lane, "launchd")
       )
 
     Mix.shell().info("oracle.migration.parity #{slice_id}: #{report["status"]}")
@@ -54,6 +65,20 @@ defmodule Mix.Tasks.Oracle.Migration.Parity do
     Mix.shell().info("  behavior_passed: #{report["behavior_passed"]}")
     Mix.shell().info("  negative_api_passed: #{report["negative_api_passed"]}")
     Mix.shell().info("  negative_mix_test_passed: #{report["negative_mix_test_passed"]}")
+
+    Enum.each(
+      [
+        "boot_identity_passed",
+        "marker_comparison_passed",
+        "hard_stop_scan_passed",
+        "negative_control_passed"
+      ],
+      fn key ->
+        if Map.has_key?(report, key) do
+          Mix.shell().info("  #{key}: #{report[key]}")
+        end
+      end
+    )
 
     if report["parity_passed"] do
       :ok
