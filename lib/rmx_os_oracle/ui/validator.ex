@@ -493,7 +493,12 @@ defmodule RmxOSOracle.UI.Validator do
     |> Kernel.++(common_item_errors(data["summary"], "/data/summary"))
     |> Kernel.++(canonicalization_action_errors(data["actions"]))
     |> Kernel.++(canonicalization_other_action_errors(data["other_actions"]))
-    |> Kernel.++(blocked_dependency_edge_errors(data["blocked_dependency_edges"]))
+    |> Kernel.++(
+      blocked_dependency_edge_errors(
+        data["blocked_dependency_edges"],
+        "/data/blocked_dependency_edges"
+      )
+    )
     |> nested_type_error(
       data["dependency_audit"],
       "blocked_edge_count",
@@ -608,6 +613,12 @@ defmodule RmxOSOracle.UI.Validator do
       :list,
       "/data/fixture_import_status"
     )
+    |> Kernel.++(
+      blocked_dependency_edge_errors(
+        get_in(data, ["dependency_audit", "blocked_edges"]),
+        "/data/dependency_audit/blocked_edges"
+      )
+    )
   end
 
   defp canonicalization_action_errors(actions) when is_map(actions) do
@@ -716,7 +727,7 @@ defmodule RmxOSOracle.UI.Validator do
 
   defp canonicalization_other_action_errors(_actions), do: []
 
-  defp blocked_dependency_edge_errors(edges) when is_list(edges) do
+  defp blocked_dependency_edge_errors(edges, path) when is_list(edges) do
     edges
     |> Enum.with_index()
     |> Enum.flat_map(fn
@@ -730,14 +741,14 @@ defmodule RmxOSOracle.UI.Validator do
       when is_binary(source) and is_binary(target) and is_binary(kind) and is_binary(reason) ->
         if string_list?(refs),
           do: [],
-          else: ["/data/blocked_dependency_edges contains non-string source_refs"]
+          else: ["#{path} contains non-string source_refs"]
 
       {_edge, index} ->
-        ["/data/blocked_dependency_edges/#{index} is not a blocked dependency edge"]
+        ["#{path}/#{index} is not a blocked dependency edge"]
     end)
   end
 
-  defp blocked_dependency_edge_errors(_edges), do: []
+  defp blocked_dependency_edge_errors(_edges, _path), do: []
 
   defp type_error(errors, map, key, type, path) do
     nested_type_error(errors, map, key, type, path)

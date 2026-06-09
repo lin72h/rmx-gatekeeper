@@ -502,6 +502,8 @@ defmodule RmxOSOracle.UI.Model do
   defp blocked_dependency_edges(_errors), do: []
 
   defp blocked_dependency_edge(error) when is_binary(error) do
+    # Dependency.audit/1 currently reports canonical blockers in this string shape.
+    # The fallback keeps the UI honest if that private message format changes.
     case String.split(error, " -> ", parts: 2) do
       ["blocked dependency edge: " <> source, target] ->
         blocked_dependency_edge(String.trim(source), String.trim(target), "blocked", error)

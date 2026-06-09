@@ -159,6 +159,17 @@ defmodule RmxOSOracleUIValidatorTest do
     assert Enum.any?(errors, &String.contains?(&1, "blocked dependency edge"))
   end
 
+  test "rejects malformed migration blocked dependency edges" do
+    invalid =
+      snapshot("migration")
+      |> put_in(["data", "dependency_audit", "blocked_edges"], [
+        "blocked dependency edge: source -> target"
+      ])
+
+    assert {:error, errors} = Validator.validate(invalid)
+    assert Enum.any?(errors, &String.contains?(&1, "/data/dependency_audit/blocked_edges"))
+  end
+
   defp snapshot(page) do
     Export.build_snapshot(page,
       model: FakeModel,
