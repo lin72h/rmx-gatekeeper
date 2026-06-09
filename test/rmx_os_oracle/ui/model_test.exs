@@ -64,4 +64,22 @@ defmodule RmxOSOracleUIModelTest do
                warning["severity"] == "error"
            end)
   end
+
+  test "canonicalization groups required M0 target actions and blocked edges" do
+    result = Model.canonicalization()
+    actions = result["data"]["actions"]
+
+    assert Map.keys(actions) |> Enum.sort() ==
+             ~w(keep_elixir keep_fixture port_to_elixir port_to_zig relocate_zig retain_c_reference_until_zig_parity)
+
+    assert actions["keep_elixir"]["entry_count"] == 36
+    assert actions["keep_fixture"]["entry_count"] == 17
+    assert actions["port_to_elixir"]["entry_count"] == 44
+    assert actions["port_to_zig"]["status"] == "not_applicable"
+    assert actions["retain_c_reference_until_zig_parity"]["entry_count"] == 16
+    assert actions["relocate_zig"]["entry_count"] == 2
+
+    assert result["data"]["status_semantics"] =~ "do not certify completion"
+    assert is_list(result["data"]["blocked_dependency_edges"])
+  end
 end

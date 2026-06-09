@@ -33,6 +33,36 @@ defmodule RmxOSOracleUIExportTest do
       }
     end
 
+    def canonicalization(_opts) do
+      %{
+        "source_refs" => [],
+        "warnings" => [],
+        "data" => %{
+          "status_semantics" => "status semantics",
+          "summary" => [],
+          "actions" =>
+            Map.new(
+              ~w(keep_elixir keep_fixture port_to_elixir port_to_zig retain_c_reference_until_zig_parity relocate_zig),
+              fn action ->
+                {action,
+                 %{
+                   "action" => action,
+                   "label" => action,
+                   "status" => "not_applicable",
+                   "status_meaning" => "manifest_classification_readiness",
+                   "entry_count" => 0,
+                   "entries" => [],
+                   "source_refs" => []
+                 }}
+              end
+            ),
+          "other_actions" => [],
+          "blocked_dependency_edges" => [],
+          "dependency_audit" => %{"blocked_edge_count" => 0}
+        }
+      }
+    end
+
     def repo_status(_repo_root) do
       %{"sha" => "abc123", "dirty" => false, "warnings" => []}
     end
@@ -57,6 +87,8 @@ defmodule RmxOSOracleUIExportTest do
       }
     end
 
+    def canonicalization(_opts), do: FakeModel.canonicalization([])
+
     def repo_status(_repo_root) do
       %{"sha" => "abc123", "dirty" => false, "warnings" => []}
     end
@@ -74,7 +106,7 @@ defmodule RmxOSOracleUIExportTest do
     report =
       Export.export(
         model: FakeModel,
-        pages: ["overview", "migration"],
+        pages: ["overview", "migration", "canonicalization"],
         snapshot_subdir: subdir,
         generated_at: "2026-06-09T00:00:00Z"
       )
@@ -87,6 +119,11 @@ defmodule RmxOSOracleUIExportTest do
       assert snapshot["repo"]["sha"] == "abc123"
       assert snapshot["ui"]["semantics"] == "a2ui-inspired"
     end
+
+    snapshot = output_dir |> Path.join("canonicalization.json") |> File.read!() |> JSON.decode!()
+    assert snapshot["schema"] == "rmxos_oracle.ui.canonicalization.v1"
+    assert snapshot["repo"]["sha"] == "abc123"
+    assert snapshot["ui"]["surface_id"] == "canonicalization"
   end
 
   test "rejects a symlinked output path component" do

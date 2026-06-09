@@ -5,12 +5,23 @@ defmodule RmxOSOracle.UI.Validator do
     "rmxos_oracle.ui.overview.v1" =>
       ~w(phase m1_acceptance source_freeze m0_manifest checks hard_stops),
     "rmxos_oracle.ui.migration.v1" =>
-      ~w(milestones imported_files manifest_drift dependency_audit fixture_import_status)
+      ~w(milestones imported_files manifest_drift dependency_audit fixture_import_status),
+    "rmxos_oracle.ui.canonicalization.v1" =>
+      ~w(status_semantics summary actions other_actions blocked_dependency_edges dependency_audit)
   }
   @surface_by_schema %{
     "rmxos_oracle.ui.overview.v1" => "overview",
-    "rmxos_oracle.ui.migration.v1" => "migration"
+    "rmxos_oracle.ui.migration.v1" => "migration",
+    "rmxos_oracle.ui.canonicalization.v1" => "canonicalization"
   }
+  @canonicalization_actions ~w(
+    keep_elixir
+    keep_fixture
+    port_to_elixir
+    port_to_zig
+    retain_c_reference_until_zig_parity
+    relocate_zig
+  )
 
   @catalog "rmxos_oracle.ui.catalog.v1"
   @components ~w(
@@ -469,6 +480,25 @@ defmodule RmxOSOracle.UI.Validator do
     |> Kernel.++(migration_group_errors(data))
   end
 
+  defp data_shape_errors("rmxos_oracle.ui.canonicalization.v1", data) do
+    []
+    |> type_error(data, "status_semantics", :string, "/data")
+    |> type_error(data, "summary", :list, "/data")
+    |> type_error(data, "actions", :map, "/data")
+    |> type_error(data, "other_actions", :list, "/data")
+    |> type_error(data, "blocked_dependency_edges", :list, "/data")
+    |> type_error(data, "dependency_audit", :map, "/data")
+    |> Kernel.++(common_item_errors(data["summary"], "/data/summary"))
+    |> Kernel.++(canonicalization_action_errors(data["actions"]))
+    |> Kernel.++(canonicalization_other_action_errors(data["other_actions"]))
+    |> nested_type_error(
+      data["dependency_audit"],
+      "blocked_edge_count",
+      :integer,
+      "/data/dependency_audit"
+    )
+  end
+
   defp data_shape_errors(_schema, _data), do: []
 
   defp common_item_errors(items, path) when is_list(items) do
@@ -577,6 +607,89 @@ defmodule RmxOSOracle.UI.Validator do
     )
   end
 
+  defp canonicalization_action_errors(actions) when is_map(actions) do
+    missing =
+      @canonicalization_actions
+      |> Enum.reject(&Map.has_key?(actions, &1))
+      |> Enum.map(&"/data/actions/#{&1} is required")
+
+    item_errors =
+      Enum.flat_map(actions, fn {action, item} ->
+        canonicalization_action_item_errors(action, item)
+      end)
+
+    missing ++ item_errors
+  end
+
+  defp canonicalization_action_errors(_actions), do: []
+
+  defp canonicalization_action_item_errors(action, %{
+         "action" => action_name,
+         "label" => label,
+         "status" => status,
+         "status_meaning" => status_meaning,
+         "entry_count" => entry_count,
+         "entries" => entries,
+         "source_refs" => refs
+       })
+       when is_binary(action) and is_binary(action_name) and is_binary(label) and
+              status in @statuses and is_binary(status_meaning) and is_integer(entry_count) and
+              is_list(entries) and is_list(refs) do
+    entry_errors =
+      entries
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {entry, index} ->
+        canonicalization_entry_errors(entry, "/data/actions/#{action}/entries/#{index}")
+      end)
+
+    if action_name == action, do: entry_errors, else: ["/data/actions/#{action}/action mismatch"]
+  end
+
+  defp canonicalization_action_item_errors(action, _item),
+    do: ["/data/actions/#{action} is not a canonicalization action item"]
+
+  defp canonicalization_entry_errors(
+         %{
+           "path" => path,
+           "language" => language,
+           "role" => role,
+           "target_action" => target_action,
+           "canonical" => canonical,
+           "status" => status,
+           "status_meaning" => status_meaning,
+           "source_refs" => refs
+         },
+         _path
+       )
+       when is_binary(path) and is_binary(language) and is_binary(role) and
+              is_binary(target_action) and is_boolean(canonical) and status in @statuses and
+              is_binary(status_meaning) and is_list(refs) do
+    []
+  end
+
+  defp canonicalization_entry_errors(_entry, path),
+    do: ["#{path} is not a canonicalization entry"]
+
+  defp canonicalization_other_action_errors(actions) when is_list(actions) do
+    actions
+    |> Enum.with_index()
+    |> Enum.flat_map(fn
+      {%{
+         "action" => action,
+         "entry_count" => entry_count,
+         "status" => status,
+         "source_refs" => refs
+       }, _index}
+      when is_binary(action) and is_integer(entry_count) and status in @statuses and is_list(refs) ->
+        []
+
+      {_item, index} ->
+        ["/data/other_actions/#{index} is not an other-action item"]
+    end)
+  end
+
+  defp canonicalization_other_action_errors(_actions), do: []
+
   defp type_error(errors, map, key, type, path) do
     nested_type_error(errors, map, key, type, path)
   end
@@ -592,6 +705,8 @@ defmodule RmxOSOracle.UI.Validator do
 
   defp valid_type?(value, :map), do: is_map(value)
   defp valid_type?(value, :list), do: is_list(value)
+  defp valid_type?(value, :string), do: is_binary(value)
+  defp valid_type?(value, :integer), do: is_integer(value)
 
   defp string_list?(value), do: is_list(value) and Enum.all?(value, &is_binary/1)
 

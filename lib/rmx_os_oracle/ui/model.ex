@@ -10,6 +10,15 @@ defmodule RmxOSOracle.UI.Model do
   alias RmxOSOracle.Manifest
   alias RmxOSOracle.UI.SourceInventory
 
+  @canonicalization_actions ~w(
+    keep_elixir
+    keep_fixture
+    port_to_elixir
+    port_to_zig
+    retain_c_reference_until_zig_parity
+    relocate_zig
+  )
+
   def overview(opts \\ []) do
     repo_root = Keyword.get(opts, :repo_root, File.cwd!())
     source = Keyword.get(opts, :source, Manifest.default_source())
@@ -213,6 +222,87 @@ defmodule RmxOSOracle.UI.Model do
     }
   end
 
+  def canonicalization(opts \\ []) do
+    repo_root = Keyword.get(opts, :repo_root, File.cwd!())
+    {manifest, manifest_warnings} = manifest(repo_root, "canonicalization")
+    {manifest_payload, payload_warnings} = manifest_payload(repo_root)
+    {dependency, dependency_warnings} = dependency_audit(repo_root)
+
+    files = manifest_payload["files"] || []
+    blocked_edges = dependency["errors"] || []
+    grouped = Enum.group_by(files, & &1["target_action"])
+    manifest_available = manifest["status"] == "pass"
+
+    actions =
+      @canonicalization_actions
+      |> Enum.map(fn action ->
+        entries =
+          Enum.map(Map.get(grouped, action, []), &canonicalization_entry(&1, manifest_available))
+
+        {action, canonicalization_action(action, entries, manifest_available)}
+      end)
+      |> Map.new()
+
+    other_actions =
+      grouped
+      |> Map.keys()
+      |> Enum.reject(&(&1 in @canonicalization_actions))
+      |> Enum.sort()
+      |> Enum.map(fn action ->
+        %{
+          "action" => action,
+          "entry_count" => length(Map.get(grouped, action, [])),
+          "status" => if(manifest_available, do: "pass", else: "unknown"),
+          "source_refs" => [SourceInventory.manifest_path()]
+        }
+      end)
+
+    %{
+      "source_refs" =>
+        Enum.uniq([
+          SourceInventory.manifest_path(),
+          SourceInventory.dependency_path(),
+          "docs/migration-m0-inventory.md",
+          "docs/migration-m1-design.md"
+        ]),
+      "warnings" =>
+        manifest_warnings ++
+          payload_warnings ++
+          dependency_warnings ++
+          status_warnings(
+            "canonicalization.m0_manifest_failed",
+            manifest,
+            "The committed M0 manifest is missing, malformed, or has an unexpected digest.",
+            [SourceInventory.manifest_path()]
+          ) ++
+          status_warnings(
+            "canonicalization.dependency_audit_failed",
+            dependency,
+            "The original-M1-scope dependency audit failed.",
+            [SourceInventory.dependency_path()]
+          ) ++
+          blocked_edge_warnings(blocked_edges),
+      "data" => %{
+        "status_semantics" =>
+          "Action and entry status report whether the M0 manifest classification and dependency audit were readable; they do not certify completion or platform evidence.",
+        "summary" =>
+          Enum.map(@canonicalization_actions, fn action ->
+            action_summary(Map.fetch!(actions, action))
+          end),
+        "actions" => actions,
+        "other_actions" => other_actions,
+        "blocked_dependency_edges" => blocked_edges,
+        "dependency_audit" => %{
+          "status" => dependency["status"],
+          "scope" => "original_m1_scan_set",
+          "edge_count" => dependency["edge_count"] || 0,
+          "blocked_edge_count" => length(blocked_edges),
+          "source_refs" => [SourceInventory.dependency_path()]
+        }
+      }
+    }
+  end
+
   def repo_status(repo_root \\ File.cwd!()) do
     sha = git(repo_root, ["rev-parse", "HEAD"])
     status = git(repo_root, ["status", "--short", "--untracked-files=all"])
@@ -252,6 +342,18 @@ defmodule RmxOSOracle.UI.Model do
           if(Manifest.digest(loaded) == Manifest.expected_digest(), do: "pass", else: "fail")
       }
     end)
+  end
+
+  defp manifest_payload(repo_root) do
+    path = Path.join(repo_root, SourceInventory.manifest_path())
+
+    safe_read(
+      "canonicalization.manifest_payload_unavailable",
+      [SourceInventory.manifest_path()],
+      fn ->
+        Manifest.load_expected(path)
+      end
+    )
   end
 
   defp manifest_preflight(source, repo_root) do
@@ -356,6 +458,53 @@ defmodule RmxOSOracle.UI.Model do
     {entries, warnings}
   end
 
+  defp canonicalization_action(action, entries, manifest_available) do
+    status =
+      cond do
+        not manifest_available -> "unknown"
+        entries == [] -> "not_applicable"
+        true -> "pass"
+      end
+
+    %{
+      "action" => action,
+      "label" => action,
+      "status" => status,
+      "status_meaning" => "manifest_classification_readiness",
+      "entry_count" => length(entries),
+      "entries" => entries,
+      "source_refs" => [SourceInventory.manifest_path()]
+    }
+  end
+
+  defp canonicalization_entry(file, manifest_available) do
+    %{
+      "path" => file["path"],
+      "language" => file["language"],
+      "role" => file["role"],
+      "target_action" => file["target_action"],
+      "canonical" => file["canonical"],
+      "complexity" => file["complexity"],
+      "contains_embedded_awk" => file["contains_embedded_awk"],
+      "status" => if(manifest_available, do: "pass", else: "unknown"),
+      "status_meaning" => "manifest_classification_present",
+      "source_refs" => [SourceInventory.manifest_path()]
+    }
+  end
+
+  defp action_summary(action) do
+    %{
+      "id" => action["action"],
+      "label" => action["label"],
+      "status" => action["status"],
+      "severity" =>
+        if(action["status"] in ["pass", "not_applicable"], do: "info", else: "warning"),
+      "summary" => "#{action["entry_count"]} manifest entries classified as #{action["action"]}.",
+      "details" => [],
+      "source_refs" => action["source_refs"]
+    }
+  end
+
   defp zig_scaffold(repo_root) do
     refs = SourceInventory.zig_paths()
     missing = Enum.reject(refs, &File.exists?(Path.join(repo_root, &1)))
@@ -458,6 +607,19 @@ defmodule RmxOSOracle.UI.Model do
   end
 
   defp status_warnings(_id, _report, _message, _refs), do: []
+
+  defp blocked_edge_warnings([]), do: []
+
+  defp blocked_edge_warnings(blocked_edges) do
+    [
+      warning(
+        "canonicalization.blocked_dependency_edges_present",
+        "warning",
+        "#{length(blocked_edges)} blocked dependency edges are present in the original-M1-scope audit.",
+        [SourceInventory.dependency_path()]
+      )
+    ]
+  end
 
   defp same_commit?(nil, _expected), do: false
 

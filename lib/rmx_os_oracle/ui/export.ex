@@ -11,7 +11,8 @@ defmodule RmxOSOracle.UI.Export do
   @snapshot_dir "priv/runs/ui-snapshots"
   @pages %{
     "overview" => {"overview.json", "rmxos_oracle.ui.overview.v1"},
-    "migration" => {"migration.json", "rmxos_oracle.ui.migration.v1"}
+    "migration" => {"migration.json", "rmxos_oracle.ui.migration.v1"},
+    "canonicalization" => {"canonicalization.json", "rmxos_oracle.ui.canonicalization.v1"}
   }
 
   def snapshot_dir, do: @snapshot_dir
@@ -58,6 +59,7 @@ defmodule RmxOSOracle.UI.Export do
       case page do
         "overview" -> model.overview(model_opts)
         "migration" -> model.migration(model_opts)
+        "canonicalization" -> model.canonicalization(model_opts)
       end
 
     repo = model.repo_status(repo_root)
@@ -137,6 +139,29 @@ defmodule RmxOSOracle.UI.Export do
         "component" => "DataTable",
         "columns" => ~w(source_path target_path category status),
         "bind" => %{"rows" => "/data/imported_files"}
+      }
+    ])
+  end
+
+  defp ui("canonicalization") do
+    surface("canonicalization", [
+      %{
+        "id" => "root",
+        "component" => "Page",
+        "children" => ["provenance", "warnings", "summary", "blocked_edges"]
+      },
+      provenance_component(),
+      warning_component(),
+      %{
+        "id" => "summary",
+        "component" => "StatusSummary",
+        "bind" => %{"items" => "/data/summary"}
+      },
+      %{
+        "id" => "blocked_edges",
+        "component" => "DataTable",
+        "columns" => ~w(source target reason),
+        "bind" => %{"rows" => "/data/blocked_dependency_edges"}
       }
     ])
   end

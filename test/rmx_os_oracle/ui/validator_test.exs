@@ -7,6 +7,7 @@ defmodule RmxOSOracleUIValidatorTest do
   defmodule FakeModel do
     def overview(_opts), do: page_model("checks", [])
     def migration(_opts), do: page_model("imported_files", [])
+    def canonicalization(_opts), do: page_model("summary", [])
 
     def repo_status(_repo_root) do
       %{"sha" => "abc123", "dirty" => false, "warnings" => []}
@@ -33,6 +34,31 @@ defmodule RmxOSOracleUIValidatorTest do
               "dependency_audit" => %{"blocked_edges" => [], "allowed_edges" => []},
               "fixture_import_status" => %{"imported" => [], "skipped" => [], "blocked" => []}
             }
+
+          "summary" ->
+            %{
+              "status_semantics" => "status semantics",
+              "summary" => value,
+              "actions" =>
+                Map.new(
+                  ~w(keep_elixir keep_fixture port_to_elixir port_to_zig retain_c_reference_until_zig_parity relocate_zig),
+                  fn action ->
+                    {action,
+                     %{
+                       "action" => action,
+                       "label" => action,
+                       "status" => "not_applicable",
+                       "status_meaning" => "manifest_classification_readiness",
+                       "entry_count" => 0,
+                       "entries" => [],
+                       "source_refs" => []
+                     }}
+                  end
+                ),
+              "other_actions" => [],
+              "blocked_dependency_edges" => [],
+              "dependency_audit" => %{"blocked_edge_count" => 0}
+            }
         end
 
       %{"source_refs" => [], "warnings" => [], "data" => data}
@@ -42,6 +68,13 @@ defmodule RmxOSOracleUIValidatorTest do
   test "accepts a complete overview snapshot" do
     assert :ok =
              "overview"
+             |> snapshot()
+             |> Validator.validate()
+  end
+
+  test "accepts a complete canonicalization snapshot" do
+    assert :ok =
+             "canonicalization"
              |> snapshot()
              |> Validator.validate()
   end
