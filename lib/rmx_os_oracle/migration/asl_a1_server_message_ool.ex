@@ -62,6 +62,7 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
     {"ASL_A1_ARM_START", "positive_decode"},
     {"ASL_A1_EXPECTED_OOL_BYTE_COUNT", @expected_ool_byte_count},
     {"ASL_A1_CLIENT_SEND_STARTED", "1"},
+    {"ASL_A1_CLIENT_SEND_KR", "0"},
     {"ASL_A1_SERVER_RECEIVE_KR", "0"},
     {"ASL_A1_SERVER_REQUESTED_AUDIT_TRAILER", "1"},
     {"ASL_A1_SERVER_AUDIT_TRAILER_PRESENT", "1"},
@@ -79,18 +80,17 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
     {"ASL_A1_PROCESS_MESSAGE_PAYLOAD_MATCH", "1"},
     {"ASL_A1_DONOR_RELEASE_COMPLETED", "1"},
     {"ASL_A1_GENERATED_DEMUX_HANDLED", "1"},
-    {"ASL_A1_CLIENT_SEND_KR", "0"},
     {"ASL_A1_POSITIVE_DECODE_AND_STUB_CONFIRMED", "1"},
     {"ASL_A1_ARM_END", "positive_decode"}
   ]
   @malformed_exact [
     {"ASL_A1_ARM_START", "malformed_payload"},
     {"ASL_A1_CLIENT_SEND_STARTED", "1"},
+    {"ASL_A1_CLIENT_SEND_KR", "0"},
     {"ASL_A1_SERVER_RECEIVE_KR", "0"},
     {"ASL_A1_GENERATED_DEMUX_CALLED", "1"},
     {"ASL_A1_DONOR_SERVER_MESSAGE_ENTER", "1"},
     {"ASL_A1_GENERATED_DEMUX_HANDLED", "1"},
-    {"ASL_A1_CLIENT_SEND_KR", "0"},
     {"ASL_A1_NEG_MALFORMED_PAYLOAD_REJECTED", "1"},
     {"ASL_A1_ARM_END", "malformed_payload"}
   ]
@@ -110,6 +110,7 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
   ]
   @critical_positive_order [
     {"ASL_A1_CLIENT_SEND_STARTED", "1"},
+    {"ASL_A1_CLIENT_SEND_KR", "0"},
     {"ASL_A1_SERVER_RECEIVE_KR", "0"},
     {"ASL_A1_GENERATED_DEMUX_CALLED", "1"},
     {"ASL_A1_DONOR_SERVER_MESSAGE_ENTER", "1"},
@@ -119,6 +120,23 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
     {"ASL_A1_POSITIVE_DECODE_AND_STUB_CONFIRMED", "1"},
     {"ASL_A1_ARM_END", "positive_decode"}
   ]
+  @arm_order_contracts %{
+    "positive_decode" => @critical_positive_order,
+    "malformed_payload" => [
+      {"ASL_A1_CLIENT_SEND_STARTED", "1"},
+      {"ASL_A1_CLIENT_SEND_KR", "0"},
+      {"ASL_A1_SERVER_RECEIVE_KR", "0"},
+      {"ASL_A1_GENERATED_DEMUX_CALLED", "1"},
+      {"ASL_A1_DONOR_SERVER_MESSAGE_ENTER", "1"},
+      {"ASL_A1_GENERATED_DEMUX_HANDLED", "1"},
+      {"ASL_A1_NEG_MALFORMED_PAYLOAD_REJECTED", "1"},
+      {"ASL_A1_ARM_END", "malformed_payload"}
+    ],
+    "invalid_ool" => [
+      {"ASL_A1_NEG_INVALID_OOL_DESCRIPTOR_REJECTED", "1"},
+      {"ASL_A1_ARM_END", "invalid_ool"}
+    ]
+  }
   @arm_contracts %{
     "positive_decode" => @positive_exact,
     "malformed_payload" => @malformed_exact,
@@ -258,7 +276,12 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
     serial_path = Path.join(evidence_dir, "asl_a1_serial.log")
     boot_identity_path = Path.join(evidence_dir, "boot_identity.json")
     serial = File.read!(serial_path)
-    boot_identity = CanonicalJSON.decode!(boot_identity_path)
+
+    boot_identity =
+      boot_identity_path
+      |> CanonicalJSON.decode!()
+      |> recompute_boot_identity_from_serial(serial)
+
     marker_validation = validate_serial(serial)
     hard_stop_scan = hard_stop_scan(serial)
     negative_controls = negative_controls(serial)
@@ -286,6 +309,8 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
       "serial_path" => "asl_a1_serial.log",
       "serial_sha256" => sha256_file(serial_path),
       "boot_identity_ref" => "boot_identity.json",
+      "boot_identity_recomputed" => true,
+      "boot_identity" => boot_identity,
       "boot_identity_passed" => boot_identity["passed"],
       "marker_validation_passed" => marker_validation["passed"],
       "marker_validation_errors" => marker_validation["errors"],
@@ -945,18 +970,32 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
       "kernel" => file_identity(kernel_path),
       "mach_ko" => file_identity(mach_ko_path),
       "guest_image" => file_identity(guest_image),
-      "mach_module_loaded_marker" =>
-        serial
-        |> String.split("\n")
-        |> Enum.any?(&(&1 == "mach_module=loaded"))
+      "mach_module_loaded_marker" => mach_module_loaded?(serial)
     }
 
+    put_boot_identity_passed(fields)
+  end
+
+  defp recompute_boot_identity_from_serial(boot_identity, serial) do
+    boot_identity
+    |> Map.put("mach_module_loaded_marker", mach_module_loaded?(serial))
+    |> put_boot_identity_passed()
+  end
+
+  defp put_boot_identity_passed(boot_identity) do
     Map.put(
-      fields,
+      boot_identity,
       "passed",
-      fields["mach_module_loaded_marker"] and present_hash?(fields["kernel"]) and
-        present_hash?(fields["mach_ko"]) and present_hash?(fields["guest_image"])
+      boot_identity["mach_module_loaded_marker"] and present_hash?(boot_identity["kernel"]) and
+        present_hash?(boot_identity["mach_ko"]) and present_hash?(boot_identity["guest_image"])
     )
+  end
+
+  defp mach_module_loaded?(serial) do
+    serial
+    |> parse_serial()
+    |> Map.fetch!(:lines)
+    |> Enum.any?(&(&1 == "mach_module=loaded"))
   end
 
   defp hard_stop_matches(serial) do
@@ -1041,7 +1080,7 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
         end
       end)
 
-    order_errors = arm_order_errors(arm, entries, required)
+    order_errors = arm_order_errors(arm, entries)
 
     contamination_errors =
       @arm_exclusive_keys
@@ -1073,11 +1112,12 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOol do
     %{errors: errors, report: %{"passed" => errors == [], "errors" => errors}}
   end
 
-  defp arm_order_errors(_arm, [], _required), do: []
+  defp arm_order_errors(_arm, []), do: []
 
-  defp arm_order_errors(arm, entries, required) do
+  defp arm_order_errors(arm, entries) do
     {_last, errors} =
-      Enum.reduce(required, {-1, []}, fn {key, value} = marker, {last, errors} ->
+      Enum.reduce(Map.fetch!(@arm_order_contracts, arm), {-1, []}, fn {key, value} = marker,
+                                                                      {last, errors} ->
         indices =
           entries
           |> Enum.filter(&(&1.key == key and &1.value == value))

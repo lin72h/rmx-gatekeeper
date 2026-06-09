@@ -19,6 +19,7 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
   ASL_A1_EXPECTED_OOL_BYTE_COUNT=96
   ASL_A1_EXPECTED_OOL_SHA256=#{@payload_sha}
   ASL_A1_CLIENT_SEND_STARTED=1
+  ASL_A1_CLIENT_SEND_KR=0
   ASL_A1_SERVER_RECEIVE_KR=0
   ASL_A1_SERVER_RECEIVED_MSG_ID=118
   ASL_A1_SERVER_REQUESTED_AUDIT_TRAILER=1
@@ -46,11 +47,11 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
   ASL_A1_PROCESS_MESSAGE_PAYLOAD_MATCH=1
   ASL_A1_DONOR_RELEASE_COMPLETED=1
   ASL_A1_GENERATED_DEMUX_HANDLED=1
-  ASL_A1_CLIENT_SEND_KR=0
   ASL_A1_POSITIVE_DECODE_AND_STUB_CONFIRMED=1
   ASL_A1_ARM_END=positive_decode
   ASL_A1_ARM_START=malformed_payload
   ASL_A1_CLIENT_SEND_STARTED=1
+  ASL_A1_CLIENT_SEND_KR=0
   ASL_A1_SERVER_RECEIVE_KR=0
   ASL_A1_SERVER_RECEIVED_MSG_ID=118
   ASL_A1_SERVER_REQUESTED_AUDIT_TRAILER=1
@@ -60,7 +61,6 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
   ASL_A1_RECEIVED_OOL_BYTE_COUNT=28
   ASL_A1_RECEIVED_OOL_SHA256=03a1bc4f95a8e9a6baafb960a79ff36b42f823ee19b7ff46b196cfe788bb9e05
   ASL_A1_GENERATED_DEMUX_HANDLED=1
-  ASL_A1_CLIENT_SEND_KR=0
   ASL_A1_NEG_MALFORMED_PAYLOAD_REJECTED=1
   ASL_A1_ARM_END=malformed_payload
   ASL_A1_ARM_START=invalid_ool
@@ -89,7 +89,72 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
   end
 
   test "required falsifiers fail closed" do
-    assert AslA1ServerMessageOol.negative_controls(@valid_serial)["passed"]
+    controls = AslA1ServerMessageOol.negative_controls(@valid_serial)
+
+    assert controls["passed"]
+    assert length(controls["controls"]) == 25
+
+    refute Enum.any?(controls["controls"], fn control ->
+             control
+             |> Map.get("observed_errors", [])
+             |> Enum.any?(&String.contains?(&1, "CLIENT_SEND_KR"))
+           end)
+
+    assert control_errors(controls, "missing_terminal")
+           |> Enum.any?(&String.contains?(&1, "terminal requires exactly one ASL_A1_DONE=1"))
+
+    assert control_errors(controls, "donor_entry_without_decode_ok")
+           |> Enum.any?(&String.contains?(&1, "ASL_A1_DONOR_DECODE_OK"))
+
+    assert control_errors(controls, "equal_fake_ool_hashes")
+           |> Enum.any?(&String.contains?(&1, "Oracle-pinned payload hash"))
+
+    assert control_errors(controls, "malformed_duplicate_client_send")
+           |> Enum.any?(&String.contains?(&1, "ASL_A1_CLIENT_SEND_STARTED"))
+  end
+
+  test "CRLF boot marker is accepted by post-run boot identity recomputation" do
+    dir = temp_dir!("crlf-boot-identity")
+
+    try do
+      File.write!(
+        Path.join(dir, "asl_a1_serial.log"),
+        String.replace(@valid_serial, "\n", "\r\n")
+      )
+
+      CanonicalJSON.write!(Path.join(dir, "boot_identity.json"), boot_identity_fixture(false))
+
+      report = AslA1ServerMessageOol.revalidate_evidence(dir)
+
+      assert report["boot_identity_recomputed"]
+      assert report["boot_identity"]["mach_module_loaded_marker"]
+      assert report["boot_identity_passed"]
+      assert report["marker_validation_passed"]
+      refute report["passed"]
+      assert report["donor_build_provenance_errors"] != []
+    after
+      File.rm_rf!(dir)
+    end
+  end
+
+  test "CLIENT_SEND_KR belongs to client phase and remains required" do
+    result = AslA1ServerMessageOol.validate_serial(@valid_serial)
+
+    assert result["passed"]
+
+    missing_client_send_kr =
+      replace_in_arm(
+        @valid_serial,
+        "positive_decode",
+        "ASL_A1_CLIENT_SEND_KR=0",
+        "ASL_A1_CLIENT_SEND_KR_REMOVED=1"
+      )
+      |> AslA1ServerMessageOol.validate_serial()
+
+    refute missing_client_send_kr["passed"]
+
+    assert missing_client_send_kr["errors"]
+           |> Enum.any?(&String.contains?(&1, "ASL_A1_CLIENT_SEND_KR=0"))
   end
 
   test "wrong value cannot satisfy exact marker validation" do
@@ -166,6 +231,21 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
     refute invalid_order["passed"]
     refute no_entry["passed"]
     refute no_decode["passed"]
+  end
+
+  test "server and donor causal order remains strict" do
+    demux_before_receive =
+      @valid_serial
+      |> swap_first("ASL_A1_SERVER_RECEIVE_KR=0", "ASL_A1_GENERATED_DEMUX_CALLED=1")
+      |> AslA1ServerMessageOol.validate_serial()
+
+    release_before_decode =
+      @valid_serial
+      |> swap_first("ASL_A1_DONOR_DECODE_OK=1", "ASL_A1_DONOR_RELEASE_COMPLETED=1")
+      |> AslA1ServerMessageOol.validate_serial()
+
+    refute demux_before_receive["passed"]
+    refute release_before_decode["passed"]
   end
 
   test "OOL counts, hashes, and full equality are independently required" do
@@ -352,5 +432,30 @@ defmodule RmxOSOracle.Migration.AslA1ServerMessageOolTest do
       "ASL_A1_ARM_START=#{arm}" <>
       String.replace(body, original, replacement, global: false) <>
       "ASL_A1_ARM_END=#{arm}" <> after_arm
+  end
+
+  defp swap_first(serial, first, second) do
+    token = "__TEST_SWAP__"
+
+    serial
+    |> String.replace(first, token, global: false)
+    |> String.replace(second, first, global: false)
+    |> String.replace(token, second, global: false)
+  end
+
+  defp control_errors(controls, id) do
+    controls["controls"]
+    |> Enum.find(&(&1["id"] == id))
+    |> Map.fetch!("observed_errors")
+  end
+
+  defp boot_identity_fixture(marker_value) do
+    %{
+      "schema" => "rmxos_oracle.asl_a1.boot_identity.v1",
+      "mach_module_loaded_marker" => marker_value,
+      "kernel" => %{"sha256" => String.duplicate("1", 64), "size" => 1},
+      "mach_ko" => %{"sha256" => String.duplicate("2", 64), "size" => 1},
+      "guest_image" => %{"sha256" => String.duplicate("3", 64), "size" => 1}
+    }
   end
 end
