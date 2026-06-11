@@ -1,0 +1,13 @@
+{
+  "accepted_claim": "donor_asl_submit_to_process_message_sink",
+  "accepted_evidence_path": "priv/runs/asl-a3/20260611T024450Z-submit-path",
+  "accepted_serial_sha256": "1020927bc4086c1c355ceb0199756521250b4f60ff6cc68fa03966824a7f6298",
+  "fixture_path": "test/fixtures/asl/a3/submit_path.accepted.serial.log",
+  "fixture_sha256": "dbf23e6667e3c9aecb2a7164c28d7865c0147e9c486348bd7f22efc9f5e892b9",
+  "fixture_transformation": "mechanical CR removal and trailing-whitespace normalization only",
+  "raw_evidence_tree_digest": "1a2c88f7969f7a07c1c27c2fb9dbec95568b81310f27a57a044732435efd829d",
+  "runtime_scaffold_pin": "d2e10c75d5565ebed397e84c456c51e685621295",
+  "schema": "rmxos_oracle.asl_a3.accepted_serial_fixture.v1",
+  "source_authorization_pin": "829bb25ab5a58e9a4ee522a4c288400b8a89b541",
+  "source_closeout_pin": "b894f5abd1731d40c23003c8f0a05392098299b5"
+}
