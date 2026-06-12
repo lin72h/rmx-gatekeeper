@@ -29,7 +29,7 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
   `/Users/me/wip-mach/wip-gpt/docs/role-governance.md`: Maestro, Conductor,
   Implementer, Oracle Explorer/Gatekeeper, Validator, and Arbiter.
 - Current source authority is
-  `6ace1e51f76bf32156f7d39e57b4c41b404fc8c9`.
+  `44035b603e8e6ba71faf7afb635d162d2bd18a09`.
 - This file remains the Oracle worktree operational testing and change-lane
   rulebook. If role wording here conflicts with the source role-governance
   document, the source role-governance document wins.
