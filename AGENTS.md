@@ -30,13 +30,49 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
   Implementer, Oracle Explorer/Gatekeeper, Validator, and Arbiter.
 - Current source authority is
   `6ace1e51f76bf32156f7d39e57b4c41b404fc8c9`.
-- This file remains the Oracle worktree operational testing and direct-fix
+- This file remains the Oracle worktree operational testing and change-lane
   rulebook. If role wording here conflicts with the source role-governance
   document, the source role-governance document wins.
 - Every Oracle output declares `mode: explorer` or `mode: gatekeeper`.
   Explorer outputs use ready/not-ready/smallest-requirement vocabulary for
   gate and evidence-state assertions. Gatekeeper outputs use
   accepted/not-accepted/consumed/disposition vocabulary.
+
+## Change Lanes
+
+- Full evidence ceremony applies to any change that touches runtime claims,
+  markers, attempt accounting, or evidence trees, regardless of file type. The
+  ceremony is activation record, Validator routing, Gatekeeper staging, and
+  attempt accounting.
+- Every other change, including docs, templates, and harness glue, lands as:
+  Implementer commit, one Conductor review, Maestro acceptance. Validator
+  review is optional at Maestro routing.
+- Ambiguity defaults to the evidence lane. Oracle Gatekeeper polices this
+  boundary and stops if a docs-lane or tooling-lane change alters a runtime
+  claim, marker, attempt account, or evidence tree.
+- Mechanical staging corrections during an activation may be fixed directly by
+  the Implementer and re-staged by Gatekeeper without a Conductor round trip.
+  This applies only to staging config, probe enable-lists, rc-entry
+  normalization, pin substitution, and harness-glue paths.
+- Mechanical staging corrections never include probe logic, marker emission, or
+  expected-set definitions.
+- Mechanical staging corrections are capped at two per activation. Each use is
+  logged in the governing record with a correction pin. A third stop is a full
+  stop to the Conductor.
+- The record-reconciliation rule is unchanged: the committed activation or
+  amendment record outranks in-band assertions. If the committed record and the
+  in-band request disagree, Gatekeeper stops before spending a guest attempt.
+
+## Doctrine Currency
+
+- Governance documents state only the current ruleset. Changing a rule replaces
+  its text; superseded rules are deleted and git history is the archive.
+- Event-specific material, including takeover narratives, activation routing,
+  and incident reports, belongs in activation records or run evidence, not in
+  rules documents.
+- Owner overrules are patched into doctrine immediately. They are not tracked
+  as pending governance state.
+- Removal rationale belongs in the commit message, not in the doctrine text.
 
 ## Guest-Run Activation
 
@@ -83,24 +119,22 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
   falsifiable source/kernel/dispatch requirement, and do not rerun without a new
   activation or amendment.
 
-## Direct Oracle Worktree Fixes
+## Oracle Worktree Changes
 
-- The Implementer may edit this Oracle worktree directly when the fix is
-  obvious, host-only, and the back-and-forth request loop would add avoidable
-  latency. This is a narrow standing one-way-door delegation: the acting role is
-  Implementer and the owning role is Oracle.
-- Allowed direct fixes include typo/pin corrections, validation/tooling bugs,
-  formatting failures, missing host-only checks, and documentation that records
-  already-known state.
+- The Implementer may make docs-lane Oracle worktree changes when routed by
+  Maestro or Conductor under the change-lane rule above.
+- During an activation, the Implementer may make only the mechanical staging
+  corrections named in `Change Lanes`; Gatekeeper then re-stages and counts the
+  correction against the governing record.
 - Pin fixes are limited to making a pin match an already-committed record, such
   as typo or path-class corrections. Repointing any evidence, authority, or
   authorization pin to a different commit is excluded and goes through the
   normal Oracle pin-update flow.
-- This exception excludes marker manifests, contract checks, falsifiers, and
-  evidence-validation modules.
-- Do not use this exception for guest runs, evidence curation, marker authority,
-  certification/artifact promotion, parity-tag movement, or any change that
-  expands or judges a runtime claim.
-- Preserve the Implementer/Oracle boundary in the report: state exactly what
-  changed, why the direct-fix exception applied, which checks passed, and
-  notify Oracle, the Conductor, and the Maestro.
+- These paths are never mechanical staging corrections: marker manifests,
+  contract checks, falsifiers, and evidence-validation modules.
+- Do not use a docs-lane or mechanical correction for guest runs, evidence
+  curation, marker authority, certification/artifact promotion, parity-tag
+  movement, or any change that expands or judges a runtime claim.
+- Reports for direct Oracle worktree changes state exactly what changed, which
+  lane applied, which checks passed, and whether any correction count was
+  consumed.

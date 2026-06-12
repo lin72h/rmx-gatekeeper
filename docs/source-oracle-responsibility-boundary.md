@@ -5,7 +5,8 @@ Status: normative Oracle architecture and governance policy.
 Source policy authority:
 
 - repository: `/Users/me/wip-mach/wip-gpt`
-- commit: `6ace1e51f76bf32156f7d39e57b4c41b404fc8c9`
+- role-governance commit: `6ace1e51f76bf32156f7d39e57b4c41b404fc8c9`
+- current two-rule regime: Maestro accepted on 2026-06-12
 - source documents:
   - `docs/role-governance.md`
   - `docs/source-oracle-responsibility-boundary.md`
@@ -81,13 +82,60 @@ When Oracle finds missing or incorrect product/runtime behavior:
 An Oracle authorization to test, build, stage, or run a committed source pin
 does not authorize source-repository writes.
 
+## Change Lanes
+
+Full evidence ceremony applies to any change that touches runtime claims,
+markers, attempt accounting, or evidence trees, regardless of file type. The
+ceremony is activation record, Validator routing, Gatekeeper staging, and
+attempt accounting.
+
+Every other change, including docs, templates, and harness glue, lands as:
+Implementer commit, one Conductor review, Maestro acceptance. Validator review
+is optional at Maestro routing.
+
+Ambiguity defaults to the evidence lane. Oracle Gatekeeper polices this
+boundary and stops if a docs-lane or tooling-lane change alters a runtime
+claim, marker, attempt account, or evidence tree.
+
+Mechanical staging corrections during an activation may be fixed directly by
+the Implementer and re-staged by Gatekeeper without a Conductor round trip.
+This applies only to staging config, probe enable-lists, rc-entry
+normalization, pin substitution, and harness-glue paths. It never includes
+probe logic, marker emission, or expected-set definitions.
+
+Gatekeeper duties for a mid-activation mechanical correction:
+
+1. Verify the correction is logged in the governing record with a correction
+   pin.
+2. Count the correction against the current activation.
+3. Re-stage from the corrected committed pin.
+4. Treat the third stop in an activation as a full stop to the Conductor.
+
+The record-reconciliation rule is unchanged: the committed activation or
+amendment record outranks in-band assertions. If the committed record and the
+in-band request disagree, Gatekeeper stops before spending a guest attempt.
+
+## Doctrine Currency
+
+Governance documents state only the current ruleset. Changing a rule replaces
+its text; superseded rules are deleted and git history is the archive.
+
+Event-specific material, including takeover narratives, activation routing,
+and incident reports, belongs in activation records or run evidence, not in
+rules documents.
+
+Owner overrules are patched into doctrine immediately. They are not tracked as
+pending governance state.
+
+Removal rationale belongs in the commit message, not in the doctrine text.
+
 ## Repository Write And Access Policy
 
 | Role | rmxOS source repository | Oracle repository | Evidence authority |
 | --- | --- | --- | --- |
 | Maestro | parent-access exception authority; doctrine and scope decisions | parent-access exception authority | may require supersession, not silent rewrite |
 | Conductor | no standing write authority | no standing write authority | none |
-| Implementer | read/write; sole product implementation authority | narrow host-only direct-fix exception when recorded | none |
+| Implementer | read/write; sole product implementation authority | docs-lane writes and mechanical staging corrections when routed or logged by rule | none |
 | Oracle Explorer | read-only | read/write for host review and readiness work | no guest attempts or dispositions |
 | Oracle Gatekeeper | read-only | read/write for guest evidence, marker authority, and closeouts | sole pass/fail disposition authority |
 | Validator | no write authority | no write authority | none |
@@ -106,14 +154,12 @@ one-way-door access rule. The one-way-window is read-only visibility; tree
 position grants no repository writes by itself. Writable direct access requires
 a recorded one-way-door exception.
 
-The Implementer-to-Oracle host-only direct-fix exception in `AGENTS.md` is a
-narrow standing one-way-door delegation for tooling, pin, formatting, and
-documentation fixes. Pin fixes are limited to making a pin match an
-already-committed record, such as typo or path-class corrections. Repointing
-any evidence, authority, or authorization pin to a different commit is excluded
-and goes through the normal Oracle pin-update flow. The direct-fix exception
-also excludes marker manifests, contract checks, falsifiers, and
-evidence-validation modules.
+Oracle worktree changes follow the change-lane rule in `AGENTS.md`. Pin fixes
+are limited to making a pin match an already-committed record, such as typo or
+path-class corrections. Repointing any evidence, authority, or authorization
+pin to a different commit is excluded and goes through the normal Oracle
+pin-update flow. Marker manifests, contract checks, falsifiers, and
+evidence-validation modules are never mechanical staging corrections.
 
 ## Oracle Modes
 
@@ -144,6 +190,11 @@ vocabulary for gate and evidence-state assertions:
 - closeout.
 
 Only Gatekeeper mode may consume or account guest attempts.
+
+Gatekeeper also polices the change-lane boundary. If a requested docs-lane,
+template, harness-glue, or mechanical correction is ambiguous, Gatekeeper
+treats it as evidence-lane work until a governing record or Maestro routing
+states otherwise.
 
 ## Static Check
 
