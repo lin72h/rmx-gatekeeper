@@ -67,7 +67,7 @@ defmodule RmxOSOracle.Stable15.EnvMatrix do
             "accepted_source_profile" => "stable15-active",
             "source_pin_id" => "stable15-active",
             "freebsd_src" => @stable15_src,
-            "expected_freebsd_src_commit" => "f71260cf4c9e",
+            "expected_freebsd_src_commit" => "524d71df420e",
             "kernel_objdirprefix" => @stable15_objdir
           }
         }
@@ -202,7 +202,7 @@ defmodule RmxOSOracle.Stable15.EnvMatrix do
       "accepted_source_profile" => profile,
       "source_pin_id" => profile,
       "freebsd_src" => @stable15_src,
-      "expected_freebsd_src_commit" => "f71260cf4c9e",
+      "expected_freebsd_src_commit" => "524d71df420e",
       "kernel_objdirprefix" => @stable15_objdir
     }
   end

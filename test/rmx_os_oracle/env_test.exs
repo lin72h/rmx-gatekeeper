@@ -9,7 +9,7 @@ defmodule RmxOSOracleEnvTest do
   @releng_objdir "/Users/me/wip-mach/build/releng151-mach-obj"
   @releng_rc1_objdir "/Users/me/wip-mach/build/releng151-rc1-mach-obj"
   @candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
-  @candidate_commit "f71260cf4c9e"
+  @candidate_commit "524d71df420e"
   @lane_env_keys %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
     "launchd" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD",

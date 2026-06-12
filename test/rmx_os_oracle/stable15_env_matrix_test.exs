@@ -23,11 +23,11 @@ defmodule RmxOSOracleStable15EnvMatrixTest do
              "/Users/me/wip-mach/freebsd-src-official-stable-15"
 
     assert by_id["default_stable15_active_launchd"]["observed"]["freebsd_src_commit"] ==
-             "f71260cf4c9e"
+             "524d71df420e"
 
     assert by_id["default_stable15_active_launchd"]["observed"][
              "expected_freebsd_src_commit"
-           ] == "f71260cf4c9e"
+           ] == "524d71df420e"
 
     assert by_id["default_stable15_active_launchd"]["observed"]["kernel_objdirprefix"] ==
              "/Users/me/wip-mach/build/official-stable15-mach-obj"

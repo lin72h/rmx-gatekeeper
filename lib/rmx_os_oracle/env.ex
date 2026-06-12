@@ -15,7 +15,7 @@ defmodule RmxOSOracle.Env do
   @official_stable15_candidate "official-stable15-candidate"
   @canonical_freebsd_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
   @stable15_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
-  @stable15_commit "f71260cf4c9e"
+  @stable15_commit "524d71df420e"
   @stable15_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
   @stable15_profiles [@stable15_active, @official_stable15_candidate]
   @lanes %{
