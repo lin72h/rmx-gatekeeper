@@ -26,7 +26,7 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
 ## Role Governance
 
 - Canonical project roles are defined by source
-  `/Users/me/wip-mach/wip-gpt/docs/role-governance.md`: Maestro, Conductor,
+  `/Users/me/wip-mach/wip-gpt/docs/role-governance.md`: Coordinator, Arranger,
   Implementer, Oracle Explorer/Gatekeeper, Validator, and Arbiter.
 - Current source authority is
   `44035b603e8e6ba71faf7afb635d162d2bd18a09`.
@@ -45,20 +45,20 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
   ceremony is activation record, Validator routing, Gatekeeper staging, and
   attempt accounting.
 - Every other change, including docs, templates, and harness glue, lands as:
-  Implementer commit, one Conductor review, Maestro acceptance. Validator
-  review is optional at Maestro routing.
+  Implementer commit, one Arranger review, Coordinator acceptance. Validator
+  review is optional at Coordinator routing.
 - Ambiguity defaults to the evidence lane. Oracle Gatekeeper polices this
   boundary and stops if a docs-lane or tooling-lane change alters a runtime
   claim, marker, attempt account, or evidence tree.
 - Mechanical staging corrections during an activation may be fixed directly by
-  the Implementer and re-staged by Gatekeeper without a Conductor round trip.
+  the Implementer and re-staged by Gatekeeper without an Arranger round trip.
   This applies only to staging config, probe enable-lists, rc-entry
   normalization, pin substitution, and harness-glue paths.
 - Mechanical staging corrections never include probe logic, marker emission, or
   expected-set definitions.
 - Mechanical staging corrections are capped at two per activation. Each use is
   logged in the governing record with a correction pin. A third stop is a full
-  stop to the Conductor.
+  stop to the Arranger.
 - The record-reconciliation rule is unchanged: the committed activation or
   amendment record outranks in-band assertions. If the committed record and the
   in-band request disagree, Gatekeeper stops before spending a guest attempt.
@@ -122,7 +122,7 @@ authority. Mode is declared per task (`explorer` | `gatekeeper`).
 ## Oracle Worktree Changes
 
 - The Implementer may make docs-lane Oracle worktree changes when routed by
-  Maestro or Conductor under the change-lane rule above.
+  Coordinator or Arranger under the change-lane rule above.
 - During an activation, the Implementer may make only the mechanical staging
   corrections named in `Change Lanes`; Gatekeeper then re-stages and counts the
   correction against the governing record.

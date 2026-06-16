@@ -89,15 +89,15 @@ ceremony is activation record, Validator routing, Gatekeeper staging, and
 attempt accounting.
 
 Every other change, including docs, templates, and harness glue, lands as:
-Implementer commit, one Conductor review, Maestro acceptance. Validator review
-is optional at Maestro routing.
+Implementer commit, one Arranger review, Coordinator acceptance. Validator
+review is optional at Coordinator routing.
 
 Ambiguity defaults to the evidence lane. Oracle Gatekeeper polices this
 boundary and stops if a docs-lane or tooling-lane change alters a runtime
 claim, marker, attempt account, or evidence tree.
 
 Mechanical staging corrections during an activation may be fixed directly by
-the Implementer and re-staged by Gatekeeper without a Conductor round trip.
+the Implementer and re-staged by Gatekeeper without an Arranger round trip.
 This applies only to staging config, probe enable-lists, rc-entry
 normalization, pin substitution, and harness-glue paths. It never includes
 probe logic, marker emission, or expected-set definitions.
@@ -108,7 +108,7 @@ Gatekeeper duties for a mid-activation mechanical correction:
    pin.
 2. Count the correction against the current activation.
 3. Re-stage from the corrected committed pin.
-4. Treat the third stop in an activation as a full stop to the Conductor.
+4. Treat the third stop in an activation as a full stop to the Arranger.
 
 The record-reconciliation rule is unchanged: the committed activation or
 amendment record outranks in-band assertions. If the committed record and the
@@ -132,8 +132,8 @@ Removal rationale belongs in the commit message, not in the doctrine text.
 
 | Role | rmxOS source repository | Oracle repository | Evidence authority |
 | --- | --- | --- | --- |
-| Maestro | parent-access exception authority; doctrine and scope decisions | parent-access exception authority | may require supersession, not silent rewrite |
-| Conductor | no standing write authority | no standing write authority | none |
+| Coordinator | parent-access exception authority; doctrine and scope decisions | parent-access exception authority | may require supersession, not silent rewrite |
+| Arranger | no standing write authority | no standing write authority | none |
 | Implementer | read/write; sole product implementation authority | docs-lane writes and mechanical staging corrections when routed or logged by rule | none |
 | Oracle Explorer | read-only | read/write for host review and readiness work | no guest attempts or dispositions |
 | Oracle Gatekeeper | read-only | read/write for guest evidence, marker authority, and closeouts | sole pass/fail disposition authority |
@@ -192,7 +192,7 @@ Only Gatekeeper mode may consume or account guest attempts.
 
 Gatekeeper also polices the change-lane boundary. If a requested docs-lane,
 template, harness-glue, or mechanical correction is ambiguous, Gatekeeper
-treats it as evidence-lane work until a governing record or Maestro routing
+treats it as evidence-lane work until a governing record or Coordinator routing
 states otherwise.
 
 ## Static Check
