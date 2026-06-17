@@ -125,6 +125,60 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
   === phase095a notifyd n2 concurrency end rc=0 ===
   """
 
+  @n2c2b_serial """
+  WARNING: WITNESS option enabled, expect reduced performance.
+  KDB: debugger backends: ddb
+  KDB: current backend: ddb
+  === phase095b notifyd n2c2b client-death start ===
+  mach_module=loaded
+  NOTIFYD_N2_LAUNCHD_CHECKIN_REQUEST kr=0 result=dict
+  NOTIFYD_N2_LAUNCHD_MACH_SERVICES_DICT present=1 type=dict
+  NOTIFYD_N2_LAUNCHD_SERVICE_ENTRY service=com.apple.system.notification_center present=1 type=machport
+  NOTIFYD_N2_LAUNCHD_RECEIVE_RIGHT service=com.apple.system.notification_center port=21 right=receive
+  NOTIFYD_N2_LAUNCHD_CHECKIN_TERMINAL status=0
+  NOTIFYD_N2C2B_SMOKE_START status=0 clients=1
+  NOTIFYD_N2C2B_CLIENT_SPAWN pid=1062 status=0
+  NOTIFYD_N2C2B_CLIENT_PORT kr=0 port=20
+  NOTIFYD_N2C2B_CLIENT_MAKE_SEND kr=0
+  NOTIFYD_N2_KERNEL_MACH_MSG_RECEIVE msgid=78945669 local_port=21 size=56 trailer_type=0
+  NOTIFYD_N2_KERNEL_AUDIT_TRAILER msgid=78945669 client_pid=1062 auid=0 euid=0 egid=0 trailer_size=52
+  NOTIFYD_N2_PROC_SOURCE_CREATE pid=1062 source_created=1
+  NOTIFYD_N2C2B_PROC_SOURCE_CREATE pid=1062 source_created=1
+  NOTIFYD_N2C2B_PROC_SOURCE_RESUME pid=1062 resumed=1
+  NOTIFYD_N2_KERNEL_MACH_MSG_RECEIVE msgid=78945681 local_port=21 size=40 trailer_type=0
+  NOTIFYD_N2_KERNEL_AUDIT_TRAILER msgid=78945681 client_pid=1062 auid=0 euid=0 egid=0 trailer_size=52
+  NOTIFYD_N2_KERNEL_MACH_MSG_RECEIVE msgid=78945679 local_port=21 size=40 trailer_type=0
+  NOTIFYD_N2_KERNEL_AUDIT_TRAILER msgid=78945679 client_pid=1062 auid=0 euid=0 egid=0 trailer_size=52
+  NOTIFYD_N2C2B_CLIENT_REGISTER name=org.rmxos.notifyd.n2c2b.dead_client token=0 status=0
+  NOTIFYD_N2_KERNEL_MACH_MSG_RECEIVE msgid=78945698 local_port=21 size=72 trailer_type=0
+  NOTIFYD_N2_KERNEL_AUDIT_TRAILER msgid=78945698 client_pid=1062 auid=0 euid=0 egid=0 trailer_size=52
+  NOTIFYD_N2_PROC_SOURCE_CREATE pid=1062 source_created=1
+  NOTIFYD_N2C2B_PROC_SOURCE_CREATE pid=1062 source_created=1
+  NOTIFYD_N2C2B_PROC_SOURCE_RESUME pid=1062 resumed=1
+  NOTIFYD_N2C2B_PORTPROC_LOOKUP registered_name=26 site=register found=0
+  NOTIFYD_N2_MACH_SEND_SOURCE_CREATE notify_port=21 registered_name=26 source_created=1
+  NOTIFYD_N2C2B_MACH_SEND_SOURCE_CREATE registered_name=26 source_created=1
+  NOTIFYD_N2C2B_SEND_RIGHT_RETAIN registered_name=26 kr=0
+  NOTIFYD_N2C2B_PORTPROC_INSERT registered_name=26 state=suspended
+  NOTIFYD_N2C2B_MACH_SEND_SOURCE_RESUME registered_name=26 resumed=1
+  NOTIFYD_N2C2B_PRIVATE_NOTIFY_UPDATE_ENTER registered_name=26 new=9 del=0 mask=13 prev=0 fflags=9
+  NOTIFYD_N2C2B_PRIVATE_NOTIFY_UPDATE_REQUEST kr=0 previous=0 msgid=72 sync=1 registered_name=26 notify_port=28
+  NOTIFYD_N2C2B_PRIVATE_MSG_DRAIN_ENTER fflags=0 data=0 ext0=4096 ext1=16384
+  NOTIFYD_N2C2B_PRIVATE_MSG_DRAIN_FAST id=72 local=28 size=36
+  NOTIFYD_N2C2B_PRIVATE_DEAD_NAME name=26
+  NOTIFYD_N2C2B_CLIENT_EXIT pid=1062 status=0
+  NOTIFYD_N2C2B_PRIVATE_NOTIFY_MERGE_ENTER name=26 flag=1 final=1
+  NOTIFYD_N2C2B_PRIVATE_NOTIFY_MERGE_FIND found=1 name=26 fflags=9 data=9
+  NOTIFYD_N2C2B_PRIVATE_SOURCE_MERGE_KEVENT filter=-20 fflags=1 data=0 mask=9
+  NOTIFYD_N2C2B_PRIVATE_NOTIFY_UPDATE_ENTER registered_name=26 new=0 del=9 mask=13 prev=0 fflags=9
+  NOTIFYD_N2C2B_PORTPROC_LOOKUP registered_name=26 site=event found=1
+  NOTIFYD_N2C2B_PORT_EVENT_ENTER registered_name=26 data=1
+  NOTIFYD_N2_MACH_SEND_DEAD_EVENT registered_name=26 data=1
+  NOTIFYD_N2C2B_TERMINAL status=0
+  phase095b_notifyd_n2c2b_exit=0
+  === phase095b notifyd n2c2b client-death end rc=1 ===
+  """
+
   test "validates accepted MACH_SEND contract with corrected rc normalization" do
     serial = String.replace(@mach_send_serial, "\n", "\r\n")
     result = NotifydN2Series.validate_serial(:mach_send, serial, run_guest_rc: "1")
@@ -156,11 +210,41 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
     assert NotifydN2Series.negative_controls(:concurrency, @concurrency_serial, "1")["passed"]
   end
 
+  test "validates narrowed N2C-2b client-death contract as distinct family" do
+    result =
+      NotifydN2Series.validate_serial(:n2c2b_client_death, @n2c2b_serial, run_guest_rc: "1")
+
+    assert result["passed"]
+    assert result["terminal_contract"]["run_guest_rc_accepted"]
+    assert NotifydN2Series.marker_coverage(:n2c2b_client_death, @n2c2b_serial)["passed"]
+
+    assert NotifydN2Series.negative_controls(:n2c2b_client_death, @n2c2b_serial, "1")[
+             "passed"
+           ]
+
+    assert MarkerManifest.spec!(:n2c2b_mach_send_dead_event).family == :n2c2b_client_death
+
+    assert MarkerManifest.spec!(:n2c2b_mach_send_dead_event).fields == %{
+             registered_name: :positive_integer,
+             data: :positive_integer
+           }
+
+    assert MarkerManifest.spec!(:mach_send_dead_event).fields == %{
+             count: {:eq, "1"},
+             duplicate: {:eq, "0"},
+             data: :positive_integer
+           }
+  end
+
   test "authority records validate-only reclassification and open N2 obligations" do
     closeout = MarkerManifest.closeout()
 
     assert closeout.accepted_claim == MarkerManifest.accepted_claim()
     assert closeout.accepted_claims.concurrency == MarkerManifest.narrowed_concurrency_claim()
+
+    assert closeout.accepted_claims.n2c2b_client_death ==
+             MarkerManifest.n2c2b_client_death_claim()
+
     assert closeout.governing_record_commit == MarkerManifest.governing_record_commit()
 
     assert closeout.concurrency_governing_record_commit ==
@@ -171,13 +255,25 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
     assert closeout.source_pins.concurrency_validator ==
              MarkerManifest.concurrency_validator_pin()
 
+    assert closeout.source_pins.n2c2b_validator == MarkerManifest.n2c2b_validator_pin()
     assert closeout.source_pins.donor_decode_fix == MarkerManifest.donor_decode_fix_pin()
     assert closeout.coordinator_acceptance =~ "narrowed N2C-1/N2C-2a/N2C-3"
     assert "direct_launchd_notifyd_facts_for_n2c_1" in closeout.satisfied_obligations
     assert "direct_kernel_receive_facts_for_n2c_2a" in closeout.satisfied_obligations
-    assert "n2c_2b_cross_process_client_death_observation" in closeout.open_obligations
-    assert "NOTIFYD_N2_MACH_SEND_DEAD_EVENT" in closeout.deferred_marker_families.n2c_2b
-    assert "NOTIFYD_N2_PROC_SOURCE_EVENT" in closeout.deferred_marker_families.n2c_2b
+
+    assert "n2c_2b_cross_process_client_death_observation:satisfied-via-narrowed-contract" in closeout.satisfied_obligations
+
+    refute "n2c_2b_cross_process_client_death_observation" in closeout.open_obligations
+
+    assert "proc_path_independent_validation_non_port_client_or_non_racing_death" in closeout.open_obligations
+
+    assert "NOTIFYD_N2_PROC_SOURCE_EVENT" in closeout.deferred_marker_families.n2c_2b_proc_path_independent_validation
+
+    assert closeout.accepted_marker_families.n2c2b_client_death.field_policy == %{
+             registered_name: :positive_integer,
+             data: :positive_integer
+           }
+
     assert closeout.new_guest_run_for_authority_extraction == false
   end
 
@@ -192,7 +288,7 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
     assert MarkerManifest.producer_breakdown()[:donor] > 0
     assert MarkerManifest.producer_breakdown()[:harness] > 0
     assert MarkerManifest.producer_breakdown()[:kernel] > 0
-    assert MarkerManifest.producer_breakdown()[:launchd] == 5
+    assert MarkerManifest.producer_breakdown()[:launchd] == 10
   end
 
   test "coverage maps every accepted family key to authority" do
@@ -201,7 +297,8 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
           mach_raw: @mach_raw_serial,
           mach_direct: @mach_direct_serial,
           dispatch_notify_trace_timeout: @notify_trace_timeout_serial,
-          concurrency: @concurrency_serial
+          concurrency: @concurrency_serial,
+          n2c2b_client_death: @n2c2b_serial
         ] do
       coverage = NotifydN2Series.marker_coverage(family, serial)
 
@@ -303,6 +400,15 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
              "af1a56ee8d9b81def49babf3b6c211700416658253a83152b253f94146711500"
 
     assert concurrency["passed"]
+
+    n2c2b =
+      Enum.find(report["results"], &(&1["family"] == "n2c2b_client_death")) ||
+        flunk("n2c2b_client_death evidence hash result missing")
+
+    assert n2c2b["expected_sha256"] ==
+             "eb28d75767826183374b5f18dca32dffad78e2491d88c1f8c2e5f1b21c293333"
+
+    assert n2c2b["passed"]
   end
 
   test "preserved accepted MACH_SEND evidence revalidates when present" do
@@ -327,6 +433,22 @@ defmodule RmxOSOracle.Migration.NotifydN2SeriesTest do
       assert report["passed"]
       assert report["accepted_claim"] == MarkerManifest.narrowed_concurrency_claim()
       assert report["serial_sha256"] == MarkerManifest.evidence(:concurrency).serial_sha256
+      assert report["raw_evidence_mutated"] == false
+    end
+  end
+
+  test "preserved narrowed N2C-2b evidence revalidates when present" do
+    evidence_path = Path.join(File.cwd!(), MarkerManifest.evidence(:n2c2b_client_death).path)
+
+    if File.exists?(evidence_path) do
+      report = NotifydN2Series.revalidate_accepted_family(:n2c2b_client_death, File.cwd!())
+
+      assert report["passed"]
+      assert report["accepted_claim"] == MarkerManifest.n2c2b_client_death_claim()
+
+      assert report["serial_sha256"] ==
+               MarkerManifest.evidence(:n2c2b_client_death).serial_sha256
+
       assert report["raw_evidence_mutated"] == false
     end
   end

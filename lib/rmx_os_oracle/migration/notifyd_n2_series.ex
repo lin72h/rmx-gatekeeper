@@ -11,7 +11,8 @@ defmodule RmxOSOracle.Migration.NotifydN2Series do
              :mach_raw,
              :mach_direct,
              :dispatch_notify_trace_timeout,
-             :concurrency
+             :concurrency,
+             :n2c2b_client_death
            ] and
              is_binary(serial) do
     run_guest_rc = Keyword.get(opts, :run_guest_rc)
@@ -330,18 +331,21 @@ defmodule RmxOSOracle.Migration.NotifydN2Series do
   defp terminal_id(:mach_direct), do: :mach_direct_terminal
   defp terminal_id(:dispatch_notify_trace_timeout), do: :trace_terminal
   defp terminal_id(:concurrency), do: :concurrency_terminal
+  defp terminal_id(:n2c2b_client_death), do: :n2c2b_terminal
 
   defp receipt_id(:mach_send), do: :mach_send_dead_event
   defp receipt_id(:mach_raw), do: :mach_raw_notification_receive
   defp receipt_id(:mach_direct), do: :mach_direct_kevent_receive
   defp receipt_id(:dispatch_notify_trace_timeout), do: :trace_private_merge_find_zero
   defp receipt_id(:concurrency), do: :concurrency_mach_send_source_create
+  defp receipt_id(:n2c2b_client_death), do: :n2c2b_mach_send_dead_event
 
   defp start_id(:mach_send), do: :mach_send_start
   defp start_id(:mach_raw), do: :mach_raw_start
   defp start_id(:mach_direct), do: :mach_direct_start
   defp start_id(:dispatch_notify_trace_timeout), do: :trace_start
   defp start_id(:concurrency), do: :concurrency_start
+  defp start_id(:n2c2b_client_death), do: :n2c2b_start
 
   defp remove_first_matching_line(serial, spec_id) do
     {_removed?, lines} =
@@ -509,6 +513,7 @@ defmodule RmxOSOracle.Migration.NotifydN2Series do
 
   defp accepted_claim(:mach_send), do: MarkerManifest.accepted_claim()
   defp accepted_claim(:concurrency), do: MarkerManifest.narrowed_concurrency_claim()
+  defp accepted_claim(:n2c2b_client_death), do: MarkerManifest.n2c2b_client_death_claim()
   defp accepted_claim(_family), do: "supporting_split_evidence"
 
   defp sha256(data), do: :crypto.hash(:sha256, data) |> Base.encode16(case: :lower)

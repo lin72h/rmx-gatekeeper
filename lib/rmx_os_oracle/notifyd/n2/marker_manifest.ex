@@ -12,10 +12,11 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
   * narrowed accepted N2 concurrency evidence: N2C-1 direct notifyd-side
     `:launchd` check-in facts, N2C-2a kernel receive plus dispatch source
     creation, and N2C-3 unidirectional notify delivery
-  * non-claims: no N2C-2b cross-process client-death observation, no broad
+  * narrowed N2C-2b client-death evidence: cross-process MACH_SEND death-source
+    delivery and `registered_name` correlation for the registered client
+  * non-claims: no PROC-path-independent client-death validation, no broad
     libdispatch/thread-workqueue parity, no generic Phase 0.85 authority, and no
     certification claim
-  * N2 series remains open: N2C-2b is deferred to a focused sub-gate.
 
   The authority owns marker keys, field policies, family order contracts,
   hard-stop families, raw rc normalization, accepted evidence citations, and the
@@ -27,17 +28,28 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
 
   @accepted_claim "dispatch_mach_send_dead_name_same_task"
   @narrowed_concurrency_claim "n2c_1_launchd_checkin_n2c_2a_kernel_receive_mach_send_source_create_n2c_3_unidirectional_concurrency"
+  @n2c2b_client_death_claim "n2c_2b_cross_process_client_death_observation_satisfied_via_narrowed_mach_send_contract"
   @governing_record "docs/phase-0.95a-notifyd-n2-dispatch-dead-name-decode-fix-activation-record.md"
   @governing_record_commit "1542f91ef51ba5a07dcb8c812c60be021a162aa6"
   @concurrency_governing_record "docs/phase-0.95a-notifyd-n2-concurrency-activation-record.md"
   @concurrency_governing_record_commit "85021e3fbc34b771877ec9a121d5768856e30814"
   @concurrency_validator_pin "ff3b7257a08c725090712741eb06304c49ea4189d4e7e783018eeac93ecb3b8a"
+  @n2c2b_governing_record "docs/phase-0.95b-notifyd-n2c2b-client-death-activation-record.md"
+  @n2c2b_governing_record_commit "6a4a25b3ae57f5158d1f246d950600680cd5e89c"
+  @n2c2b_validator_pin "7bb8a2e077ef99ad9fd11060c52e21a17c3bd44fa4204535b15a9aa22a104797"
   @validator_correction_pin "64f47c37e93351851113e4ece65b6e9b2f12d2a9"
   @donor_decode_fix_pin "d08b35d57d7be8ae6d8a85f45ca22c53cfebac68"
   @runtime_source_pin "524d71df420e7c22fcd8fb03e7e9939c808c8971"
   @mach_ko_sha256 "49ac3d8970449817ebca964e0005ea05bfb2294b341425d9f54f8fcdadfeccc5"
 
-  @families [:mach_send, :mach_raw, :mach_direct, :dispatch_notify_trace_timeout, :concurrency]
+  @families [
+    :mach_send,
+    :mach_raw,
+    :mach_direct,
+    :dispatch_notify_trace_timeout,
+    :concurrency,
+    :n2c2b_client_death
+  ]
   @producers [:donor, :harness, :kernel, :launchd]
   @roles [
     :mach_send_public_event,
@@ -47,6 +59,7 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
     :launchd_direct,
     :kernel_direct,
     :donor_dispatch_source,
+    :n2c2b_client_death,
     :concurrency_unidirectional,
     :terminal,
     :infrastructure
@@ -111,6 +124,16 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       governing_record_commit: @concurrency_governing_record_commit,
       validator_pin: @concurrency_validator_pin,
       raw_run_guest_rc: "1"
+    },
+    n2c2b_client_death: %{
+      path: "priv/runs/notifyd-n2c2b/20260616T215503Z-client-death-reroute/attempt-a.serial.log",
+      serial_sha256: "eb28d75767826183374b5f18dca32dffad78e2491d88c1f8c2e5f1b21c293333",
+      disposition: "pending_validate_only_reclassification_for_narrowed_contract",
+      accepted_claim: @n2c2b_client_death_claim,
+      governing_record: @n2c2b_governing_record,
+      governing_record_commit: @n2c2b_governing_record_commit,
+      validator_pin: @n2c2b_validator_pin,
+      raw_run_guest_rc: "1"
     }
   }
 
@@ -126,11 +149,15 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
 
   def accepted_claim, do: @accepted_claim
   def narrowed_concurrency_claim, do: @narrowed_concurrency_claim
+  def n2c2b_client_death_claim, do: @n2c2b_client_death_claim
   def governing_record, do: @governing_record
   def governing_record_commit, do: @governing_record_commit
   def concurrency_governing_record, do: @concurrency_governing_record
   def concurrency_governing_record_commit, do: @concurrency_governing_record_commit
   def concurrency_validator_pin, do: @concurrency_validator_pin
+  def n2c2b_governing_record, do: @n2c2b_governing_record
+  def n2c2b_governing_record_commit, do: @n2c2b_governing_record_commit
+  def n2c2b_validator_pin, do: @n2c2b_validator_pin
   def validator_correction_pin, do: @validator_correction_pin
   def donor_decode_fix_pin, do: @donor_decode_fix_pin
   def runtime_source_pin, do: @runtime_source_pin
@@ -147,12 +174,15 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       accepted_claim: @accepted_claim,
       accepted_claims: %{
         mach_send: @accepted_claim,
-        concurrency: @narrowed_concurrency_claim
+        concurrency: @narrowed_concurrency_claim,
+        n2c2b_client_death: @n2c2b_client_death_claim
       },
       governing_record: @governing_record,
       governing_record_commit: @governing_record_commit,
       concurrency_governing_record: @concurrency_governing_record,
       concurrency_governing_record_commit: @concurrency_governing_record_commit,
+      n2c2b_governing_record: @n2c2b_governing_record,
+      n2c2b_governing_record_commit: @n2c2b_governing_record_commit,
       coordinator_acceptance:
         "Coordinator accepted narrowed N2C-1/N2C-2a/N2C-3 claims on 2026-06-16; validate-only reclassification uses the unchanged 090236Z serial",
       validator_reviews: %{
@@ -162,6 +192,7 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       source_pins: %{
         validator_correction: @validator_correction_pin,
         concurrency_validator: @concurrency_validator_pin,
+        n2c2b_validator: @n2c2b_validator_pin,
         donor_decode_fix: @donor_decode_fix_pin,
         runtime_source: @runtime_source_pin,
         mach_ko_sha256: @mach_ko_sha256
@@ -170,7 +201,7 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       phase085_launchd_handoff_binding: launchd_handoff_binding(),
       non_claims: [
         "no_notifyd_client_death_cleanup",
-        "no_n2c_2b_cross_process_client_death_observation",
+        "no_proc_path_independent_client_death_validation",
         "no_bidirectional_notify_check_no_contamination_claim",
         "no_broad_libdispatch_thread_workqueue_parity",
         "no_generic_phase_085_authority",
@@ -179,19 +210,33 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       satisfied_obligations: [
         "direct_launchd_notifyd_facts_for_n2c_1",
         "direct_kernel_receive_facts_for_n2c_2a",
-        "notifyd_n2_concurrency_unidirectional_batch_for_n2c_3"
+        "notifyd_n2_concurrency_unidirectional_batch_for_n2c_3",
+        "n2c_2b_cross_process_client_death_observation:satisfied-via-narrowed-contract"
       ],
       open_obligations: [
-        "n2c_2b_cross_process_client_death_observation",
+        "proc_path_independent_validation_non_port_client_or_non_racing_death",
         "notifyd_n2_series_closeout_after_n2c_2b"
       ],
       deferred_marker_families: %{
-        n2c_2b: [
-          "NOTIFYD_N2_MACH_SEND_DEAD_EVENT",
+        n2c_2b_proc_path_independent_validation: [
           "NOTIFYD_N2_PROC_SOURCE_EVENT",
-          "SOURCE_CREATE_registered_name_to_DEAD_EVENT_registered_name_correlation"
+          "NOTIFYD_N2C2B_PROC_EVENT_ENTER"
         ]
       },
+      accepted_marker_families: %{
+        n2c2b_client_death: %{
+          marker: "NOTIFYD_N2_MACH_SEND_DEAD_EVENT",
+          field_policy: %{registered_name: :positive_integer, data: :positive_integer},
+          disambiguated_from: %{
+            mach_send_same_task: %{
+              count: :positive_integer,
+              duplicate: 0,
+              data: :positive_integer
+            }
+          }
+        }
+      },
+      closeout_triggered: "notifyd_n2_series_closeout_after_n2c_2b",
       raw_evidence_mutated: false,
       new_guest_run_for_authority_extraction: false
     }
@@ -203,7 +248,7 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
     mach_send_specs() ++
       mach_raw_specs() ++
       mach_direct_specs() ++
-      notify_trace_timeout_specs() ++ concurrency_specs()
+      notify_trace_timeout_specs() ++ concurrency_specs() ++ n2c2b_client_death_specs()
   end
 
   def imported_generic_specs, do: launchd_handoff_specs()
@@ -299,7 +344,8 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       mach_raw: spec!(:mach_raw_terminal),
       mach_direct: spec!(:mach_direct_terminal),
       dispatch_notify_trace_timeout: spec!(:trace_terminal),
-      concurrency: spec!(:concurrency_terminal)
+      concurrency: spec!(:concurrency_terminal),
+      n2c2b_client_death: spec!(:n2c2b_terminal)
     }
   end
 
@@ -309,7 +355,8 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
       mach_raw: "phase07_mach_dead_name_raw_exit=0",
       mach_direct: "phase07_mach_direct_kevent_exit=0",
       dispatch_notify_trace_timeout: "phase07_dispatch_notify_trace_exit=0",
-      concurrency: "phase095a_notifyd_n2_concurrency_exit=0"
+      concurrency: "phase095a_notifyd_n2_concurrency_exit=0",
+      n2c2b_client_death: "phase095b_notifyd_n2c2b_exit=0"
     }
   end
 
@@ -1258,6 +1305,413 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
     ]
   end
 
+  defp n2c2b_client_death_specs do
+    [
+      min_spec(
+        :n2c2b_launchd_checkin_request,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_LAUNCHD_CHECKIN_REQUEST",
+        %{kr: eq("0"), result: eq("dict")},
+        :launchd_direct,
+        :launchd,
+        :launch_msg_checkin_context,
+        2,
+        1
+      ),
+      min_spec(
+        :n2c2b_launchd_mach_services_dict,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_LAUNCHD_MACH_SERVICES_DICT",
+        %{present: eq("1"), type: eq("dict")},
+        :launchd_direct,
+        :launchd,
+        :mach_services_dictionary_context,
+        3,
+        1
+      ),
+      min_spec(
+        :n2c2b_launchd_service_entry,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_LAUNCHD_SERVICE_ENTRY",
+        %{
+          service: eq("com.apple.system.notification_center"),
+          present: eq("1"),
+          type: eq("machport")
+        },
+        :launchd_direct,
+        :launchd,
+        :mach_services_entry_context,
+        4,
+        1
+      ),
+      min_spec(
+        :n2c2b_launchd_receive_right,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_LAUNCHD_RECEIVE_RIGHT",
+        %{
+          service: eq("com.apple.system.notification_center"),
+          port: positive_integer(),
+          right: eq("receive")
+        },
+        :launchd_direct,
+        :launchd,
+        :receive_right_context,
+        5,
+        1
+      ),
+      min_spec(
+        :n2c2b_launchd_terminal,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_LAUNCHD_CHECKIN_TERMINAL",
+        %{status: eq("0")},
+        :launchd_direct,
+        :launchd,
+        :terminal_context,
+        6,
+        1
+      ),
+      spec(
+        :n2c2b_start,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_SMOKE_START",
+        %{status: eq("0"), clients: eq("1")},
+        :infrastructure,
+        :harness,
+        :probe,
+        7
+      ),
+      spec(
+        :n2c2b_client_spawn,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_CLIENT_SPAWN",
+        %{pid: positive_integer(), status: eq("0")},
+        :infrastructure,
+        :harness,
+        :dead_client_orchestration,
+        8
+      ),
+      spec(
+        :n2c2b_client_port,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_CLIENT_PORT",
+        %{kr: eq("0"), port: positive_integer()},
+        :infrastructure,
+        :harness,
+        :dead_client_orchestration,
+        9
+      ),
+      spec(
+        :n2c2b_client_make_send,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_CLIENT_MAKE_SEND",
+        %{kr: eq("0")},
+        :infrastructure,
+        :harness,
+        :dead_client_orchestration,
+        10
+      ),
+      min_spec(
+        :n2c2b_kernel_mach_msg_receive,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_KERNEL_MACH_MSG_RECEIVE",
+        %{
+          msgid: positive_integer(),
+          local_port: positive_integer(),
+          size: positive_integer(),
+          trailer_type: eq("0")
+        },
+        :kernel_direct,
+        :kernel,
+        :mach_msg_receive_context,
+        11,
+        1
+      ),
+      min_spec(
+        :n2c2b_kernel_audit_trailer,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_KERNEL_AUDIT_TRAILER",
+        %{
+          msgid: positive_integer(),
+          client_pid: positive_integer(),
+          auid: integer(),
+          euid: integer(),
+          egid: integer(),
+          trailer_size: positive_integer()
+        },
+        :kernel_direct,
+        :kernel,
+        :audit_trailer_context,
+        12,
+        1
+      ),
+      min_spec(
+        :n2c2b_proc_source_create_context,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_PROC_SOURCE_CREATE",
+        %{pid: positive_integer(), source_created: eq("1")},
+        :donor_dispatch_source,
+        :donor,
+        :redundant_proc_source_setup_context,
+        13,
+        1
+      ),
+      min_spec(
+        :n2c2b_diag_proc_source_create_context,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PROC_SOURCE_CREATE",
+        %{pid: positive_integer(), source_created: eq("1")},
+        :donor_dispatch_source,
+        :donor,
+        :redundant_proc_source_setup_context,
+        14,
+        1
+      ),
+      min_spec(
+        :n2c2b_diag_proc_source_resume_context,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PROC_SOURCE_RESUME",
+        %{pid: positive_integer(), resumed: eq("1")},
+        :donor_dispatch_source,
+        :donor,
+        :redundant_proc_source_setup_context,
+        15,
+        1
+      ),
+      spec(
+        :n2c2b_client_register,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_CLIENT_REGISTER",
+        %{
+          name: eq("org.rmxos.notifyd.n2c2b.dead_client"),
+          token: nonnegative_integer(),
+          status: eq("0")
+        },
+        :infrastructure,
+        :harness,
+        :dead_client_orchestration,
+        16
+      ),
+      spec(
+        :n2c2b_register_lookup,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PORTPROC_LOOKUP",
+        %{registered_name: positive_integer(), site: eq("register"), found: eq("0")},
+        :n2c2b_client_death,
+        :donor,
+        :portproc_lookup,
+        17
+      ),
+      spec(
+        :n2c2b_mach_send_source_create,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_MACH_SEND_SOURCE_CREATE",
+        %{
+          notify_port: positive_integer(),
+          registered_name: positive_integer(),
+          source_created: eq("1")
+        },
+        :n2c2b_client_death,
+        :donor,
+        :mach_send_source_create,
+        18
+      ),
+      spec(
+        :n2c2b_diag_mach_send_source_create,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_MACH_SEND_SOURCE_CREATE",
+        %{registered_name: positive_integer(), source_created: eq("1")},
+        :n2c2b_client_death,
+        :donor,
+        :mach_send_source_create,
+        19
+      ),
+      spec(
+        :n2c2b_send_right_retain,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_SEND_RIGHT_RETAIN",
+        %{registered_name: positive_integer(), kr: eq("0")},
+        :n2c2b_client_death,
+        :donor,
+        :send_right_lifetime,
+        20
+      ),
+      spec(
+        :n2c2b_portproc_insert,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PORTPROC_INSERT",
+        %{registered_name: positive_integer(), state: eq("suspended")},
+        :n2c2b_client_death,
+        :donor,
+        :portproc_bookkeeping,
+        21
+      ),
+      spec(
+        :n2c2b_mach_send_source_resume,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_MACH_SEND_SOURCE_RESUME",
+        %{registered_name: positive_integer(), resumed: eq("1")},
+        :n2c2b_client_death,
+        :donor,
+        :mach_send_source_resume,
+        22
+      ),
+      spec(
+        :n2c2b_private_notify_update_enter,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_NOTIFY_UPDATE_ENTER",
+        %{
+          registered_name: positive_integer(),
+          new: positive_integer(),
+          del: eq("0"),
+          mask: positive_integer(),
+          prev: eq("0"),
+          fflags: positive_integer()
+        },
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private,
+        23
+      ),
+      spec(
+        :n2c2b_private_notify_update_request,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_NOTIFY_UPDATE_REQUEST",
+        %{
+          kr: eq("0"),
+          previous: eq("0"),
+          msgid: eq("72"),
+          sync: eq("1"),
+          registered_name: positive_integer(),
+          notify_port: positive_integer()
+        },
+        :n2c2b_client_death,
+        :donor,
+        :dead_name_notification_request,
+        24
+      ),
+      spec(
+        :n2c2b_private_msg_drain_enter,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_MSG_DRAIN_ENTER",
+        %{fflags: eq("0"), data: eq("0"), ext0: positive_integer(), ext1: positive_integer()},
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private_msg_drain,
+        25
+      ),
+      spec(
+        :n2c2b_private_msg_drain_fast,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_MSG_DRAIN_FAST",
+        %{id: eq("72"), local: positive_integer(), size: eq("36")},
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private_msg_drain,
+        26
+      ),
+      spec(
+        :n2c2b_private_dead_name,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_DEAD_NAME",
+        %{name: positive_integer()},
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private_decode,
+        27
+      ),
+      spec(
+        :n2c2b_client_exit,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_CLIENT_EXIT",
+        %{pid: positive_integer(), status: eq("0")},
+        :infrastructure,
+        :harness,
+        :dead_client_orchestration,
+        28
+      ),
+      spec(
+        :n2c2b_private_notify_merge_enter,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_NOTIFY_MERGE_ENTER",
+        %{name: positive_integer(), flag: eq("1"), final: eq("1")},
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private_merge,
+        29
+      ),
+      spec(
+        :n2c2b_private_notify_merge_find,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_NOTIFY_MERGE_FIND",
+        %{
+          found: eq("1"),
+          name: positive_integer(),
+          fflags: positive_integer(),
+          data: positive_integer()
+        },
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_private_merge,
+        30
+      ),
+      spec(
+        :n2c2b_private_source_merge_kevent,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PRIVATE_SOURCE_MERGE_KEVENT",
+        %{
+          filter: eq("-20"),
+          fflags: positive_integer(),
+          data: nonnegative_integer(),
+          mask: positive_integer()
+        },
+        :n2c2b_client_death,
+        :donor,
+        :libdispatch_source_merge,
+        31
+      ),
+      spec(
+        :n2c2b_event_lookup,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PORTPROC_LOOKUP",
+        %{registered_name: positive_integer(), site: eq("event"), found: eq("1")},
+        :n2c2b_client_death,
+        :donor,
+        :portproc_lookup,
+        32
+      ),
+      spec(
+        :n2c2b_port_event_enter,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_PORT_EVENT_ENTER",
+        %{registered_name: positive_integer(), data: positive_integer()},
+        :n2c2b_client_death,
+        :donor,
+        :port_event_handler,
+        33
+      ),
+      spec(
+        :n2c2b_mach_send_dead_event,
+        :n2c2b_client_death,
+        "NOTIFYD_N2_MACH_SEND_DEAD_EVENT",
+        %{registered_name: positive_integer(), data: positive_integer()},
+        :n2c2b_client_death,
+        :donor,
+        :mach_send_dead_event_cross_process,
+        34
+      ),
+      spec(
+        :n2c2b_terminal,
+        :n2c2b_client_death,
+        "NOTIFYD_N2C2B_TERMINAL",
+        %{status: eq("0")},
+        :terminal,
+        :harness,
+        :terminal,
+        35
+      )
+    ]
+  end
+
   defp launchd_handoff_specs do
     [
       imported_spec(
@@ -1349,6 +1803,19 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
         :concurrency,
         "=== phase095a notifyd n2 concurrency end rc=0 ===",
         30
+      ),
+      line(
+        :n2c2b_start_banner,
+        :n2c2b_client_death,
+        "=== phase095b notifyd n2c2b client-death start ===",
+        0
+      ),
+      line(:n2c2b_mach_module, :n2c2b_client_death, "mach_module=loaded", 1),
+      line(
+        :n2c2b_phase_exit,
+        :n2c2b_client_death,
+        "phase095b_notifyd_n2c2b_exit=0",
+        36
       )
     ]
   end
