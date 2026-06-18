@@ -5,11 +5,11 @@ defmodule RmxOSOracleEnvTest do
 
   @workspace_root "/Users/me/wip-mach"
   @releng_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
-  @candidate_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
+  @candidate_src "/Users/me/wip-mach/wip-gpt/wip-rmxos"
   @releng_objdir "/Users/me/wip-mach/build/releng151-mach-obj"
   @releng_rc1_objdir "/Users/me/wip-mach/build/releng151-rc1-mach-obj"
-  @candidate_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
-  @candidate_commit "524d71df420e"
+  @candidate_objdir "/Users/me/wip-mach/build/wip-rmxos-alpha-obj"
+  @candidate_commit "a0c2a8fb822e"
   @lane_env_keys %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",
     "launchd" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_LAUNCHD",

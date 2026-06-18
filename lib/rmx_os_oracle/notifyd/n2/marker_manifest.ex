@@ -39,7 +39,9 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
   @n2c2b_validator_pin "7bb8a2e077ef99ad9fd11060c52e21a17c3bd44fa4204535b15a9aa22a104797"
   @validator_correction_pin "64f47c37e93351851113e4ece65b6e9b2f12d2a9"
   @donor_decode_fix_pin "d08b35d57d7be8ae6d8a85f45ca22c53cfebac68"
-  @runtime_source_pin "524d71df420e7c22fcd8fb03e7e9939c808c8971"
+  @runtime_source_pin "a0c2a8fb822ee9004bd887ffce263ac925065435"
+  @kernel_sha256 "b8f3f8a739793e7bb0e6af6874b154617b0503d532c8ab943abb604fe985cc53"
+  @kernel_rebind_note "cosmetic version-string/build-id rebind from rmx/official-stable15-mach to alpha; mach.ko is byte-identical"
   @mach_ko_sha256 "49ac3d8970449817ebca964e0005ea05bfb2294b341425d9f54f8fcdadfeccc5"
 
   @families [
@@ -165,6 +167,8 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
   def validator_correction_pin, do: @validator_correction_pin
   def donor_decode_fix_pin, do: @donor_decode_fix_pin
   def runtime_source_pin, do: @runtime_source_pin
+  def kernel_sha256, do: @kernel_sha256
+  def kernel_rebind_note, do: @kernel_rebind_note
   def mach_ko_sha256, do: @mach_ko_sha256
   def families, do: @families
   def producers, do: @producers
@@ -200,6 +204,8 @@ defmodule RmxOSOracle.Notifyd.N2.MarkerManifest do
         n2c2b_validator: @n2c2b_validator_pin,
         donor_decode_fix: @donor_decode_fix_pin,
         runtime_source: @runtime_source_pin,
+        kernel_sha256: @kernel_sha256,
+        kernel_rebind_note: @kernel_rebind_note,
         mach_ko_sha256: @mach_ko_sha256
       },
       accepted_evidence: @evidence,

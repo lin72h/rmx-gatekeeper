@@ -14,9 +14,9 @@ defmodule RmxOSOracle.Env do
   @stable15_active "stable15-active"
   @official_stable15_candidate "official-stable15-candidate"
   @canonical_freebsd_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
-  @stable15_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
-  @stable15_commit "524d71df420e"
-  @stable15_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
+  @stable15_src "/Users/me/wip-mach/wip-gpt/wip-rmxos"
+  @stable15_commit "a0c2a8fb822e"
+  @stable15_objdir "/Users/me/wip-mach/build/wip-rmxos-alpha-obj"
   @stable15_profiles [@stable15_active, @official_stable15_candidate]
   @lanes %{
     "current-tree" => "NXPLATFORM_KERNEL_OBJDIRPREFIX_CURRENT_TREE",

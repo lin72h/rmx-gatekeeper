@@ -9,8 +9,8 @@ defmodule RmxOSOracle.Stable15.EnvMatrix do
   alias RmxOSOracle.Env
 
   @workspace_root "/Users/me/wip-mach"
-  @stable15_src "/Users/me/wip-mach/freebsd-src-official-stable-15"
-  @stable15_objdir "/Users/me/wip-mach/build/official-stable15-mach-obj"
+  @stable15_src "/Users/me/wip-mach/wip-gpt/wip-rmxos"
+  @stable15_objdir "/Users/me/wip-mach/build/wip-rmxos-alpha-obj"
   @releng_src "/Users/me/wip-mach/wip-gpt/freebsd-src-stable-15"
   @releng_objdir "/Users/me/wip-mach/build/releng151-mach-obj"
   @releng_rc1_objdir "/Users/me/wip-mach/build/releng151-rc1-mach-obj"
@@ -67,7 +67,7 @@ defmodule RmxOSOracle.Stable15.EnvMatrix do
             "accepted_source_profile" => "stable15-active",
             "source_pin_id" => "stable15-active",
             "freebsd_src" => @stable15_src,
-            "expected_freebsd_src_commit" => "524d71df420e",
+            "expected_freebsd_src_commit" => "a0c2a8fb822e",
             "kernel_objdirprefix" => @stable15_objdir
           }
         }
@@ -202,7 +202,7 @@ defmodule RmxOSOracle.Stable15.EnvMatrix do
       "accepted_source_profile" => profile,
       "source_pin_id" => profile,
       "freebsd_src" => @stable15_src,
-      "expected_freebsd_src_commit" => "524d71df420e",
+      "expected_freebsd_src_commit" => "a0c2a8fb822e",
       "kernel_objdirprefix" => @stable15_objdir
     }
   end

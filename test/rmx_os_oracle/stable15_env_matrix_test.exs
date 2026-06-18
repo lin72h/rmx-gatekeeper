@@ -20,17 +20,17 @@ defmodule RmxOSOracleStable15EnvMatrixTest do
              "stable15-active"
 
     assert by_id["default_stable15_active_launchd"]["observed"]["freebsd_src"] ==
-             "/Users/me/wip-mach/freebsd-src-official-stable-15"
+             "/Users/me/wip-mach/wip-gpt/wip-rmxos"
 
     assert by_id["default_stable15_active_launchd"]["observed"]["freebsd_src_commit"] ==
-             "524d71df420e"
+             "a0c2a8fb822e"
 
     assert by_id["default_stable15_active_launchd"]["observed"][
              "expected_freebsd_src_commit"
-           ] == "524d71df420e"
+           ] == "a0c2a8fb822e"
 
     assert by_id["default_stable15_active_launchd"]["observed"]["kernel_objdirprefix"] ==
-             "/Users/me/wip-mach/build/official-stable15-mach-obj"
+             "/Users/me/wip-mach/build/wip-rmxos-alpha-obj"
 
     assert by_id["official_stable15_candidate_alias"]["observed"]["freebsd_src"] ==
              by_id["explicit_stable15_active"]["observed"]["freebsd_src"]
