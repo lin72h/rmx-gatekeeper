@@ -1,27 +1,20 @@
-# GPT Oracle Workspace
+# rmx-gatekeeper — Gatekeeper Ruler
 
-This workspace owns the macOS semantic oracle validation lane for the
-NextBSD/rmxOS Mach IPC roadmap.
+This repository is the **Gatekeeper ruler** for the rmxOS / NextBSD-revival parity track
+(rmrOS side; `rmx-gatekeeper-rx-x64z`). It enforces evidence discipline, gates guest
+spends, and **runs the Explorer's macOS-27 parity tests as a validation suite against the
+Implementer's build** — so foundation-completion work is proven solid against macOS, not by
+assertion.
 
-Primary package:
+**Read `ONBOARDING.md` first** — it defines your role, the validation-suite interlock, the
+current phase, and what changed when the old unified oracle was split into dedicated rulers.
 
-- `macos-validation/`: Stage 1-2 harness, common C helpers, and the first
-  foundation smoke probe.
+- `ONBOARDING.md` — current-state briefing (authoritative; read first).
+- `AGENTS.md` — operational rulebook (change-lanes, attempt accounting, evidence ceremony,
+  guest-run discipline). Still valid — this is your core gate rulebook.
+- `archive/` — pre-split historical planning/coordination docs. Reference only; do not act
+  on decisions there — they predate the split and may use retired terms (`oracle`,
+  `nx-v64z`). `ONBOARDING.md` / `AGENTS.md` win on any conflict.
 
-Authority pointers:
-
-- `macos-runner-agent-handoff.md`: first-read instructions for native macOS
-  runner agents after cloning this repository.
-- `parent-batch1-directive.md`: authoritative parent approval for Batch 1
-  feature validation gates, stop conditions, and deliverables.
-- `parent-response-to-opus-oracle-batches.md`: parent-approved correction to
-  OPUS's Batch 1/2 dependency proposal, especially the urefs-vs-entry_refs rule.
-- `parent-progress-and-first-batch-request.md`: current oracle progress report
-  and request for the parent agent to choose the first feature/regression batch.
-- `final-preimplementation-plan.md`: Stage 1-2 implementation checklist.
-- `post-final-parent-gpt-resolution.md`: final parent cleanup decisions.
-- `gpt-stage12-integration-review.md`: GPT review of OPUS's Stage 1-2
-  implementation and continuation advice for the oracle agent.
-- `parent-gpt-stage12-integration-review.md`: review of Parent GPT's Stage 1-2
-  draft and collaboration boundaries for the oracle agent.
-- `comprehensive-nx-v64z-macos-oracle-plan.md`: broader oracle design.
+The Explorer is a separate agent (`rmx-explorer`); you consume its vectors + ledger
+**read-only** across the repo boundary.
