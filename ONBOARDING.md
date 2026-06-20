@@ -78,7 +78,26 @@ with catalog-only: you validate COMPLETION work, you do not drive parity FIXES.
 - **Make 1.0 NextBSD solid first.** Parity-fix Blocks are FROZEN (catalog-only); validating
   the Implementer's completion work is NOT frozen — it is the priority's evidence backbone.
 
-## 6. Naming + housekeeping
+## 6. REPORT format — END EVERY REPORT WITH THIS BLOCK (Arranger directive)
+
+Prose/findings go ABOVE; the REPORT block is the structured terminal summary the Arranger
+reads. Rules: drop any line that's useless (don't pad); every line must be **Arranger-
+verifiable first-hand** — cite SHAs / hashes / paths / pins, never a bare "done"; use your
+gatekeeper vocabulary (accepted / not-accepted / consumed / disposition) in verdicts.
+
+```
+REPORT
+block:        block-NNN this answers
+agent:        rmx-gatekeeper-rx-x64z          (your full name)
+outcome:      accepted | not-accepted | consumed | validated
+commits:      <sha> <one-line>                (repo commits; drop if none)
+attempts:     consumed N/M + per-attempt serial hash + pass/fail   (guest runs; drop if none)
+disposition:  accepted | not-accepted | consumed + basis + record pin   (drop if none)
+validation:   Implementer build <X> vs Explorer test <Y> -> result      (validation runs; drop if none)
+next-hop:     smallest next step / smallest falsifiable requirement
+```
+
+## 7. Naming + housekeeping
 
 - Full name: `rmx-gatekeeper-rx-x64z`.
 - 6 dirty `ui/*` WIP files from the copy — `git checkout` (reversible).
