@@ -1,0 +1,72 @@
+{
+  "schema": "rmxos_gatekeeper.macos_parity_disposition.v1",
+  "mode": "gatekeeper",
+  "op": "op-085",
+  "agent": "rmx-gatekeeper-rx-x64z",
+  "disposition": "accepted",
+  "date": "2026-06-21",
+  "scope_summary": "macOS-parity guard of retired op-081-R on the NOTIFYD_TWQ_TRACE servicing invariant. Field-level dispatch_*.json parity explicitly deferred to op-089 by Arranger op-085 scope; guarded on what op-084 proved.",
+  "validated_op": {
+    "op": "op-081-R",
+    "implementer_commit": "5675145df333",
+    "commit_subject": "dispatch: service Mach receive through TWQ workqueues",
+    "source_tree": "/Users/me/wip-mach/wip-gpt/wip-rmxos",
+    "source_branch": "alpha"
+  },
+  "explorer_evidence": {
+    "op": "op-084",
+    "lane": "explorer-rx-x64z",
+    "ledger_commit": "9965535",
+    "ledger_commit_subject": "op-084: record rx dispatch servicing-invariant parity (block-078 smoke)",
+    "evidence_file": "rmx-explorer/findings/nx-r64z/20260621-op084-dispatch-mach-recv-rx-parity.md",
+    "classification": "match at the servicing-invariant level",
+    "run_mode": "runtime-smoke (catalog-mode); 0 attempts, 0 marker-authority changes, 0 disposed evidence"
+  },
+  "macos_reference": {
+    "op": "op-082",
+    "reference_commit": "7dc9c56",
+    "reference_commit_subject": "op-082: macOS-27 dispatch/MACH_RECV reference (op-081-R validation suite)",
+    "reference_json": "rmx-explorer/macos-validation/results/mx-a64z/20260621-27.0-27.0.0/dispatch_dispatch_mach_recv_source.json",
+    "schema": "nx-r64z.macos-oracle.v1",
+    "test_id": "macos_dispatch_mach_recv_source",
+    "semantic_class": "exact_contract",
+    "environment": "macOS 27.0, Darwin 27.0.0, arm64 (Apple M4)",
+    "servicing_invariant": "DISPATCH_SOURCE_TYPE_MACH_RECV source fires on port readiness; handler services the message via mach_msg(MACH_RCV_MSG); handler_fired_and_serviced=true (mach_msg_receive_in_handler returned KERN_SUCCESS)"
+  },
+  "first_hand_verification": {
+    "serial_log": {
+      "path": "/Users/me/wip-mach/build/block-078-runtime-smoke/runs/20260621T033825Z-rx-op084-dispatch-smoke/serial.log",
+      "claimed_sha256_op084": "27999f61a4d77ffca06a8cb93e7738a003f5c7e842128a10934bebb796070d98",
+      "pinned_sha256_file": "27999f61a4d77ffca06a8cb93e7738a003f5c7e842128a10934bebb796070d98",
+      "recomputed_sha256": "27999f61a4d77ffca06a8cb93e7738a003f5c7e842128a10934bebb796070d98",
+      "matches": true
+    },
+    "markers": {
+      "all_five_status_zero": true,
+      "twq_trace_marker_line": "BLOCK078_NOTIFYD_TWQ_TRACE status=0 lines=45 source=LIBPTHREAD_TWQ_TRACE",
+      "twq_trace_marker_line_count": 1,
+      "note": "Marker carries lines=45 source=LIBPTHREAD_TWQ_TRACE — self-certifying: only emittable if KWQ enabled and 45 trace lines actually observed. op-084 evidence recorded 'count 1' (marker-line count); the marker payload is stronger than the evidence file captured."
+    },
+    "rc": { "stage_rc": 0, "run_rc": 0 },
+    "hard_stop_scan": "clean (no panic:|Fatal trap|KASSERT|lock order reversal|dispatch assert|Bad system call|Signal 12|BUG in libdispatch)",
+    "teardown": "clean per op-084 evidence; run artifacts present and intact for this verification"
+  },
+  "parity_basis": "rmxOS services a Mach-receive event through dispatch + TWQ workqueues (BLOCK078_NOTIFYD_TWQ_TRACE lines=45 source=LIBPTHREAD_TWQ_TRACE + BLOCK078_NOTIFYD_ROUNDTRIP + clean hard-stop + rc=0/0), matching the macOS-27 servicing invariant recorded in op-082 (MACH_RECV source -> handler services via mach_msg RCV, handler_fired_and_serviced=true).",
+  "coverage_caveats": {
+    "field_level_json_parity": "NOT covered. op-084 produced no rx dispatch_*.json vectors; no field-by-field diff vs mx-a64z dispatch_*.json performed. Deferred to op-089 (macos-validation-dispatch in-guest staging). Not gating per Arranger op-085 scope.",
+    "marker_emission_falsifier": "NOT first-hand verified by gatekeeper. The block-078 TWQ_TRACE marker-emission logic (whether status=0 requires lines>0) is the Explorer's marker-authority domain. Acceptance rests on the marker payload (lines=45 source=LIBPTHREAD_TWQ_TRACE) being self-certifying of actual observation, not on re-validating marker authority.",
+    "guest_root": "Empty post-run (cleaned); could not inspect staged rc.local / service env directly. KWQ-enabled condition inferred from marker payload firing with 45 trace lines, which requires LIBDISPATCH_DISABLE_KWQ unset."
+  },
+  "decision": {
+    "disposition": "accepted",
+    "basis": "Serial-hash immutability verified first-hand (re-hash = pin = claim, 27999f61...); all five markers at status=0 with TWQ_TRACE carrying lines=45 source=LIBPTHREAD_TWQ_TRACE; stage_rc=0 run_rc=0; hard-stop scan clean; macOS-27 servicing invariant (op-082) defined and matched at the servicing-invariant level. Guarded on what op-084 proved, per Arranger op-085 scope.",
+    "retirement_lane": "Gatekeeper (macOS-parity) lane only. Op retire is the Validators (GLM+DS4P) quality-validation lane at >=8/10 + agreement, Arbiter on conflict. This disposition is the macOS-faithfulness input to retire, not retire itself."
+  },
+  "scope": {
+    "frozen_evidence_rewritten": false,
+    "guest_attempts_consumed": 0,
+    "explorer_repo_mutated": false,
+    "read_only_cross_repo": true,
+    "rmxos_tree_mutated": false
+  }
+}
