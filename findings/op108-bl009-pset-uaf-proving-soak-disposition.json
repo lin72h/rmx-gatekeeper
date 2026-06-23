@@ -1,0 +1,81 @@
+{
+  "schema": "rmxos_gatekeeper.proving_soak_disposition.v1",
+  "mode": "gatekeeper",
+  "op": "op-108",
+  "agent": "rmx-gatekeeper-rx-x64z",
+  "disposition": "accepted",
+  "date": "2026-06-23",
+  "scope_summary": "2h fixed-bar regression gate (proving soak) for bl-009 (ipc_mqueue_pset_receive UAF via filt_machport). Fresh-built mach.ko from clean e101f9c, symbol-verified, baked into a disposable image, soaked 2h. PASS: retires op-105, proves bl-009.",
+  "validated_fix": {
+    "backlog": "bl-009",
+    "fix_commit": "e101f9c1872e",
+    "fix_subject": "mach: pin port-set receive candidate across lock drop",
+    "fix_file": "sys/compat/mach/ipc/ipc_mqueue.c (+19)",
+    "kernel_built_fresh_from": "clean e101f9c checkout (wip-rmxos alpha HEAD, working tree clean — no uncommitted changes)",
+    "mach_ko_sha256": "7c8a710d03d8223969372b2b8069fe235e4c5340a02d40bcc63feccc6ab4e253",
+    "symbol_verification": {
+      "method": "objdump -dr differential on ipc_mqueue.o (NOT hash-compare — FreeBSD .ko builds are non-reproducible; per Arranger correction)",
+      "ipc_mqueue_pset_receive_io_reference_calls": {
+        "fresh_e101f9c": 1,
+        "pre_fix_49ac3d89": 0
+      },
+      "ipc_mqueue_pset_receive_io_release_calls": {
+        "fresh_e101f9c": 3,
+        "pre_fix_49ac3d89": 0
+      },
+      "note": "1 ip_reference (temp-ref before pset lock drop) + 3 ip_release (revalidate-restart path + two exit paths) — exact shape of the e101f9c patch; absent in pre-fix. ip_reference/ip_release compile to io_reference/io_release."
+    }
+  },
+  "retires": {
+    "op": "op-105",
+    "reason": "op-105's 2h soak panicked on iteration 1 (Fatal trap 9: general protection fault, ipc_mqueue_pset_receive+0xbf via filt_machport, DEADC0DE poison on a freed mutex). op-108 runs the same 2h config to completion with 0 panic — the acceptance bar op-105 could not meet."
+  },
+  "proving_run": {
+    "run_dir": "/Users/me/wip-mach/build/block-078-runtime-smoke/runs/20260623T-op108-gatekeeper-2h-proving",
+    "serial_log_sha256": "57c513aed9a0f2f6f994cadf604e156e94193cd1bfdaa573e8f92668a7b1ea11",
+    "staged_mach_ko_sha256": "7c8a710d03d8223969372b2b8069fe235e4c5340a02d40bcc63feccc6ab4e253",
+    "rc_local": "SOAK_DURATION=7200 ORACLE=/root/soak-oracle-2h.d /root/soak-driver.sh",
+    "base_image": "disposable copy of 20260623T055157Z-op108-fixed-op104-smoke/block078-userland-smoke.img (most recent post-op-106 fixed-kernel image)",
+    "bhyve_uptime": "2h0m9s",
+    "run_guest_rc": 0,
+    "soak_iterations": 27293,
+    "soak_fails": 0,
+    "soak_duration": 7200,
+    "hard_stop_scan_serial": "clean (no Fatal trap | panic: | KASSERT | db> | GPF | trap 0x9 | lock order reversal | Signal 12)",
+    "hard_stop_scan_harness_log": "clean (0 panic/GPF/Fatal/trap lines across 300223 harness-log lines)"
+  },
+  "oracle_end_deltas": {
+    "marker_open": "=== SOAK ORACLE FINAL (2h) ===",
+    "marker_close": "=== SOAK ORACLE END ===",
+    "msg": "send=81844 recv=54563 delta=27281",
+    "kmsg": "alloc=136407 destroy=27281 delta=109126",
+    "queue": "enq=81844 deq=54563 delta=27281",
+    "port": "alloc=81845 destroy=81843 delta=2",
+    "port_slope_checkpoints": 120,
+    "port_slope_leak_assessment": "FLAT — port delta holds at 2 across all 120 per-minute checkpoints (t=1m delta=2 ... t=120m delta=2). Delta=2 is the expected steady-state (the 2 ports that persist for queue/source lifetime, not a leak). No monotonic growth across 2h -> no port leak. This is the per-iteration steady-state port delta op-105 owed (end-balance alone could not distinguish a leak; ports persist for queue/source lifetime)."
+  },
+  "parity_with_op105": {
+    "op105_result": "Fatal trap 9 (general protection fault) on iteration 1; ipc_mqueue_pset_receive+0xbf <- filt_machport+0x269 <- kqueue_scan; rcx/rax = deadc0de (freed-memory poison); guest hung at the kernel debugger (db>).",
+    "op108_result": "27293 iterations, 0 fails, 0 panic, clean 2h completion + poweroff, exit 0.",
+    "delta": "Same 2h soak config (SOAK_DURATION=7200, soak-oracle-2h.d, dispatch-conformance harness driving MACH_RECV create/destroy churn — exactly the load that drives the receive walk + concurrent port frees). Only material difference: op-108 carries the e101f9c fix. The UAF window is closed."
+  },
+  "decision": {
+    "disposition": "accepted",
+    "basis": "Fresh-built (from clean e101f9c) + symbol-verified mach.ko baked into a disposable image; 2h proving soak completed with 0 panic/GPF (vs op-105 iter-1 panic under the identical config); 27293 iterations 0 fails; oracle END with all 4 deltas; flat port-slope (no leak) across 120 checkpoints; clean poweroff exit 0. bl-009's UAF is gone under the 2h config that surfaced it.",
+    "retires_op_105": true,
+    "proves_bl_009": true,
+    "retirement_lane": "Gatekeeper proving-soak (fixed-bar regression gate) lane. The e101f9c correctness review (Rule 6, kernel-correctness: ref-leak paths, restart-loop termination, assertion coverage) is a SEPARATE Validators lane that ran in parallel — not gated by op-108 and not adjudicated here."
+  },
+  "coverage_caveats": {
+    "provenance_method": "Symbol/objdump differential per Arranger (FreeBSD .ko builds non-reproducible; hash-compare unsound for cross-build provenance). The incidental byte-match of the fresh e101f9c build to 7c8a710d is NOT the adjudicator.",
+    "fix_soundness_scope": "op-108 proves the RACE is gone (the 2h soak that hit the UAF no longer panics). It does NOT adjudicate the fix's broader correctness — that is the Validators' Rule 6 review (ref-leak on all exit paths, restart-loop convergence, assertion coverage), a separate lane.",
+    "harness_provenance": "harness binary + soak-driver.sh + soak-oracle-2h.d are the canonical op-104/op-107 artifacts (base image + explorer repo findings/nx-r64z/dtrace/dispatch-conformance/), reused not improvised — the Arranger's 'wrong staging -> false rmxOS-gap finding' warning respected. The only new element is the freshly-built mach.ko."
+  },
+  "scope": {
+    "frozen_evidence_rewritten": false,
+    "guest_attempts_consumed": 1,
+    "explorer_repo_mutated": false,
+    "rmxos_tree_mutated": false,
+    "read_only_cross_repo": true
+  }
+}
