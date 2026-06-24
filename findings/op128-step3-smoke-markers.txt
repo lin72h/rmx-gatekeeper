@@ -1,0 +1,16 @@
+# op-128 step-3 smoke — both samples GREEN (first-hand)
+# Sample 1 (dispatch_async_f, host-built binary [Path B], shell-run) — step3b serial:
+OP130_DISPATCH status=0
+OP130_TERMINAL status=0
+OP128_STEP3B_RUN_RC=0
+
+# Sample 2 (notify, launchd-job via shipped runner) — step3 serial:
+NOTIFY_SMOKE_START
+NOTIFY_SMOKE_SHIPPED_CHECK status=1
+NOTIFY_SMOKE_RUNNER_INVOKED status=0
+NOTIFY_SMOKE_BS_PORT value=19
+NOTIFY_SMOKE_BOOTSTRAP_LOOK_UP kr=0
+NOTIFY_SMOKE_NOTIFY_REGISTER rc=0
+NOTIFY_SMOKE_NOTIFY_POST rc=0
+NOTIFY_SMOKE_NOTIFY_CHECK check=1
+NOTIFY_SMOKE_TERMINAL status=0
