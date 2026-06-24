@@ -1,0 +1,24 @@
+# op-123 leg-4 notifyd soak — RESULT: leak bars HELD (flat slope 99m), HANG at ~99-100m (no-hang bar VIOLATED)
+# serial sha: fd2d2e95c99a6e586dfda4ddbdd58606e428a5c2b3d7f37ad922ef43df6c1b9a
+# Oracle slope checkpoints (port delta=0 flat for 99m = no leak; frozen t=100-107m = guest hung):
+# --- first 3 + last 12 checkpoints ---
+notifyd-soak-oracle begin
+[slope t=1m] port: alloc=538 destroy=538 delta=0 | dn: req=0 fire=0 | msg: s=3098 r=3139
+[slope t=2m] port: alloc=1118 destroy=1118 delta=0 | dn: req=0 fire=0 | msg: s=6411 r=6501
+[slope t=3m] port: alloc=1688 destroy=1688 delta=0 | dn: req=0 fire=0 | msg: s=9695 r=9830
+...
+[slope t=101m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=102m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=103m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=104m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=105m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=106m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=107m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=108m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=109m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=110m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=111m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+[slope t=112m] port: alloc=35004 destroy=35002 delta=2 | dn: req=0 fire=0 | msg: s=193530 r=196197
+
+# Client log: 0 FAIL, 0 iter-fail lines; last round-trip SUCCESS (check=1) — hang hit next iteration
+# bhyve state at kill: 0.0% CPU, IC (blocked/idle) — deadlock-on-wait, not spin
