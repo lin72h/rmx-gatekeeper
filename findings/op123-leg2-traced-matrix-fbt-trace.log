@@ -1,0 +1,9 @@
+notify (dead-name/no-senders) begin (target=0)
+ipc_right_dnrequest
+ipc_port_dnrequest (dead-name arm)
+ipc_port_dngrow
+ipc_port_dnrequest (dead-name arm)
+ipc_port_dnnotify (dead-name FIRE)
+ipc_right_dnrequest
+
+
