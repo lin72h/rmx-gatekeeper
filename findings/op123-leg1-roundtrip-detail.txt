@@ -1,0 +1,21 @@
+=== bs_probe OBSERVE round-trip ===
+TASK_BOOTSTRAP_PORT kr=0 port=19
+bootstrap_look_up(notify) kr=0 port=21
+notify_register_check rc=0 token=0
+notify_post rc=0
+notify_check rc=0 check=1
+op127_bs_probe_terminal status=0
+=== bs_probe RESTART round-trip ===
+TASK_BOOTSTRAP_PORT kr=0 port=19
+bootstrap_look_up(notify) kr=0 port=21
+notify_register_check rc=0 token=0
+notify_post rc=0
+notify_check rc=0 check=1
+op127_bs_probe_terminal status=0
+=== bs_probe RELOAD round-trip ===
+TASK_BOOTSTRAP_PORT kr=0 port=19
+bootstrap_look_up(notify) kr=0 port=21
+notify_register_check rc=0 token=0
+notify_post rc=0
+notify_check rc=0 check=1
+op127_bs_probe_terminal status=0
