@@ -1,0 +1,24 @@
+# op-146 asl leg-1 lifecycle validation (v2, op-147m metal probe) — PASS
+# serial sha: (computed separately)
+# Method: C metal lifecycle probe (op-147m categorically-correct) + thin rc.local glue.
+# NO shell harness, NO pgrep/grep/echo verdicts. All assertions from the compiled C binary.
+
+# Metal probe markers (from the compiled C binary, first-hand):
+OP146_PROBE_START
+OP146_LOAD status=0
+OP146_START pid_A=969 status=0
+OP146_OBSERVE_ROUNDTRIP status=0
+OP146_RESTART pid_A=969 pid_B=971 status=0
+OP146_RESTART_ROUNDTRIP status=0
+OP146_REMOVE remove_rc=0 status=0
+OP146_RELOAD status=0
+OP146_RELOAD_ROUNDTRIP status=0
+OP146_DISTINCT_PIDS=3
+OP146_LIFECYCLE_7RUNG status=PASS
+OP146_VERDICT leg1_validated=1
+OP146_PROBE_TERMINAL fails=0
+
+# .d observation: FAILED — fbt::dl_init_phdr_info is rtld userspace (not kernel fbt).
+# id-024 bar met by metal probe PID identity (syslogd alive across all rungs = ctor succeeded = no SIGSEGV).
+# .d fix for future: fbt::sigexit for syslogd signal-11 (kernel function), drop dl_init_phdr_info.
+# No regression: no SIGSEGV, no signal 11, no Fatal trap, no dl_init_phdr_info crash in serial.
