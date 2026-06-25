@@ -1,0 +1,24 @@
+# op-150 notify leg-4 re-run with id-025 freeze watchpoint
+# RESULT: FREEZE occurred (~6-8 min onset, much faster than op-123 leg-4's ~63m).
+# WATCHPOINT: captured 4 healthy heartbeats (40s), then stopped emitting.
+# No OP148_FREEZE_OBS stacks captured (blocked_now=0 throughout observed window).
+# VERDICT: freeze but no dump -> watchpoint defect OR early-onset signature.
+# serial sha: fe4a67ebcc364bb97f0dcc43c8bcc6af33f00698c144bb9fe3c75176128ee8d9
+
+# Churn probe output (healthy before freeze):
+OP150_CHURN_START duration=7200
+OP150_CHURN_HB iter=100 fails=0
+OP150_CHURN_HB iter=200 fails=0
+OP150_CHURN_HB iter=300 fails=0
+OP150_CHURN_HB iter=400 fails=0
+
+# Watchpoint heartbeats (4 captured, all healthy, then silent):
+OP148_HB mqs=40 mqr=59 mqsig=23 mqpst=38 blocked_now=0
+OP148_HB mqs=80 mqr=118 mqsig=46 mqpst=76 blocked_now=0
+OP148_HB mqs=120 mqr=178 mqsig=72 mqpst=116 blocked_now=0
+OP148_HB mqs=160 mqr=238 mqsig=98 mqpst=156 blocked_now=0
+
+# Key: onset ~6-8 min (vs ~63m in op-123 leg-4). Stochastic window much wider.
+# blocked_now=0 at all observations -> freeze not preceded by thread-block/msleep buildup.
+# Watchpoint stopped at 40s while churn ran to ~400s -> either watchpoint defect OR
+# the profile-tick stopping IS the early freeze signature (kernel timer path froze at ~40s).
