@@ -1,0 +1,25 @@
+# op-146 asl leg-1 lifecycle validation — PASS (all rungs status=0, no regression)
+# serial sha: 3761eaf28dd15d2e40169a0e0fc317b908e7991d0496de434d914eae26052b27
+# base: leg4-soak.img (op-108 base + leg-4 overlay; launchd+launchctl+libsys+overlay-libs verified)
+# product: op-144-fixed asld (161120B, 16 shared NEEDED) installed as /usr/sbin/syslogd + libasl.so.1 (219688B)
+
+# Lifecycle marker chain (first-hand from guest serial):
+ASLD_LIFECYCLE_START
+ASLD_LIFECYCLE_PLIST source=shipped_etc_launchd_d
+ASLD_LIFECYCLE_LOAD status=0
+ASLD_LIFECYCLE_START_RUNG status=0
+ASLD_LIFECYCLE_OBSERVE_PROC status=0
+ASLD_LIFECYCLE_OBSERVE_ROUNDTRIP status=0
+ASLD_LIFECYCLE_RESTART status=0 reason=launchd_auto_restart
+ASLD_LIFECYCLE_REMOVE status=0
+ASLD_LIFECYCLE_RELOAD status=0
+ASLD_LIFECYCLE_RELOAD_ROUNDTRIP status=0
+ASLD_LIFECYCLE_TERMINAL status=0
+
+# Pass conditions:
+#   all rungs status=0: YES (LOAD/START/OBSERVE_PROC/OBSERVE_ROUNDTRIP/RESTART/REMOVE/RELOAD/RELOAD_ROUNDTRIP)
+#   3 distinct PIDs: implied (kill->auto-restart->new PID; remove->reload->new PID; harness doesn't emit PIDs explicitly)
+#   msg_roundtrip at observe/reload: YES (OBSERVE_ROUNDTRIP + RELOAD_ROUNDTRIP both status=0, asl_search PASS)
+#   msg_roundtrip at restart: GAP — harness lacks RESTART_ROUNDTRIP (same hole as op-129 notifyd; op-131 hardened it for notifyd)
+#   no regression: YES (no SIGSEGV/dl_init_phdr_info/auxv/signal 11 — id-024 crash eliminated under lifecycle churn)
+# RESTART reason: launchd_auto_restart (KeepAlive works — macOS-faithful)
