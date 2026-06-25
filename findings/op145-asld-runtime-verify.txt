@@ -1,0 +1,24 @@
+# op-145 runtime boot-verify — PASS (asld past ctor into main, no SIGSEGV at dl_init_phdr_info)
+# serial sha: 20ecf3bf960d8eeb4724858016a5c032ee5642de45361fa6aefc4563ecc8795e
+# base: op-127 bs-hinge image (re-staged — see note below; spec'd nxplatform-dev.img lacked launchd/overlay)
+# staging: asld (161120B) + libasl.so.1 (219688B) from block-075-alpha-final-obj + op-138 syslogd-asld plist + rc.d/syslogd rename; 16 NEEDED link check passed
+
+# Marker chain (first-hand from the guest serial):
+OP145_LAUNCHD_UP status=0 pid=963
+OP145_SYSLOGD_LOAD status=0 OP145_SYSLOGD_START status=0
+OP145_ASLD_MAIN_REACHED status=0
+OP145_TERMINAL status=0
+
+# Verdict: PASS — OP145_ASLD_MAIN_REACHED status=0 (asld alive past ctor).
+# The op-138 SIGSEGV at dl_init_phdr_info is ELIMINATED: the shared
+# libdispatch/libmach ctors resolve dl_iterate_phdr to libsys.so.7 (runtime-proven).
+
+# Activations: v1 setup-fail (nxplatform-dev.img lacks /sbin/launchd — not consumed);
+# v2 setup-fail (launchd -u doesn't auto-load /etc/launchd.d/ — asld never loaded, no crash = not a verdict);
+# v3 PASS (explicit launchctl load+start com.apple.syslogd -> asld alive past ctor).
+
+# Base discrepancy (flagged to Arranger): the spec'd nxplatform-dev.img is a
+# pre-overlay FreeBSD image — lacks /sbin/launchd, /bin/launchctl, + the 6 overlay
+# libs (libnotify/liblaunch/libxpc/libdispatch/libosxsupport/libmach). The op-123
+# leg-4 soak ran on the op-108 image, not nxplatform-dev.img. Re-staged on op-127
+# (proven launchd+overlay base) for the verdict per the STAGING-FAIL retry procedure.
